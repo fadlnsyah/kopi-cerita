@@ -1,65 +1,304 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+/**
+ * Landing Page - Kopi Cerita
+ * 
+ * Color Palette:
+ * - Background: #F5EFE6 (Beige/Cream)
+ * - Primary: #6F4E37 (Coffee Brown)
+ * - Accent: #7A8450 (Olive)
+ * - Text: #2B2118 (Dark Brown)
+ */
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="min-h-screen" style={{ backgroundColor: '#F5EFE6' }}>
+      {/* 
+        =====================================================
+        HERO SECTION
+        =====================================================
+      */}
+      <section 
+        className="relative min-h-[90vh] flex items-center overflow-hidden"
+        style={{ background: 'linear-gradient(180deg, #F5EFE6 0%, #EBE4D8 100%)' }}
+      >
+        {/* Decorative elements */}
+        <div 
+          className="absolute top-20 right-10 w-72 h-72 rounded-full blur-3xl opacity-20"
+          style={{ backgroundColor: '#6F4E37' }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+        <div 
+          className="absolute bottom-20 left-10 w-80 h-80 rounded-full blur-3xl opacity-15"
+          style={{ backgroundColor: '#7A8450' }}
+        />
+        
+        {/* Content */}
+        <div className="container relative z-10">
+          <div className="max-w-2xl">
+            {/* Tagline */}
+            <p 
+              className="font-semibold mb-4 tracking-widest uppercase text-sm flex items-center gap-3"
+              style={{ color: '#7A8450' }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <span className="w-8 h-[2px]" style={{ backgroundColor: '#7A8450' }}></span>
+              Selamat Datang
+            </p>
+            
+            {/* Heading */}
+            <h1 
+              className="font-[family-name:var(--font-heading)] text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
+              style={{ color: '#2B2118' }}
             >
-              Learning
-            </a>{" "}
-            center.
+              Kopi Cerita
+            </h1>
+            
+            {/* Subheading */}
+            <p 
+              className="text-lg md:text-xl mb-10 leading-relaxed"
+              style={{ color: '#5C4A3D' }}
+            >
+              Setiap kopi punya cerita. Temukan ceritamu di sini, dalam setiap 
+              tegukan kopi pilihan dari berbagai penjuru Nusantara.
+            </p>
+            
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap gap-4">
+              {/* Primary Button */}
+              <a
+                href="/menu"
+                className="inline-flex items-center px-8 py-4 font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                style={{ backgroundColor: '#6F4E37', color: '#FFFDF9' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5A3D2B'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#6F4E37'}
+              >
+                <span>Lihat Menu</span>
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </a>
+              
+              {/* Secondary Button */}
+              <a
+                href="/about"
+                className="inline-flex items-center px-8 py-4 border-2 font-semibold rounded-xl transition-all duration-300 hover:shadow-md"
+                style={{ borderColor: '#6F4E37', color: '#6F4E37', backgroundColor: 'transparent' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#6F4E37'; e.currentTarget.style.color = '#FFFDF9'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#6F4E37'; }}
+              >
+                Tentang Kami
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 
+        =====================================================
+        FEATURES SECTION
+        =====================================================
+      */}
+      <section 
+        className="py-24"
+        style={{ background: 'linear-gradient(180deg, #EBE4D8 0%, #F5EFE6 100%)' }}
+      >
+        <div className="container">
+          <div className="text-center mb-16">
+            <p 
+              className="font-semibold tracking-widest uppercase text-sm mb-3 flex items-center justify-center gap-2"
+              style={{ color: '#7A8450' }}
+            >
+              <span className="w-6 h-[2px]" style={{ backgroundColor: '#7A8450' }}></span>
+              Kenapa Pilih Kami
+              <span className="w-6 h-[2px]" style={{ backgroundColor: '#7A8450' }}></span>
+            </p>
+            <h2 
+              className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold mb-4"
+              style={{ color: '#2B2118' }}
+            >
+              Mengapa Kopi Cerita?
+            </h2>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: '#5C4A3D' }}>
+              Kami percaya bahwa setiap cangkir kopi memiliki cerita. 
+              Dari petani hingga barista, setiap langkah penuh makna.
+            </p>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Card 1 - Biji Kopi */}
+            <div 
+              className="group p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              style={{ backgroundColor: '#FFFDF9', border: '1px solid #E0D6C8' }}
+            >
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                style={{ backgroundColor: '#6F4E37' }}
+              >
+                {/* Coffee Bean Icon */}
+                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+                  <ellipse cx="12" cy="12" rx="6" ry="9" stroke="#FFFDF9" strokeWidth="1.5"/>
+                  <path d="M12 3C12 3 9 7 9 12C9 17 12 21 12 21" stroke="#FFFDF9" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M8.5 6C10 7.5 10 9 9.5 11" stroke="#FFFDF9" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+                </svg>
+              </div>
+              <h3 className="font-[family-name:var(--font-heading)] text-xl font-semibold mb-3" style={{ color: '#2B2118' }}>
+                Biji Kopi Pilihan
+              </h3>
+              <p style={{ color: '#5C4A3D' }}>
+                Dipilih langsung dari petani lokal terbaik di Indonesia. 
+                Dari Gayo, Toraja, hingga Papua.
+              </p>
+            </div>
+
+            {/* Card 2 - Dibuat dengan Cinta */}
+            <div 
+              className="group p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              style={{ backgroundColor: '#FFFDF9', border: '1px solid #E0D6C8' }}
+            >
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                style={{ backgroundColor: '#7A8450' }}
+              >
+                {/* Coffee Cup with Steam Icon */}
+                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12H19V17C19 19.2091 17.2091 21 15 21H9C6.79086 21 5 19.2091 5 17V12Z" stroke="#FFFDF9" strokeWidth="1.5"/>
+                  <path d="M19 14H20C21.1046 14 22 14.8954 22 16V16C22 17.1046 21.1046 18 20 18H19" stroke="#FFFDF9" strokeWidth="1.5"/>
+                  <path d="M8 9C8 9 8.5 7 8 5" stroke="#FFFDF9" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M12 8C12 8 12.5 6 12 4" stroke="#FFFDF9" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M16 9C16 9 16.5 7 16 5" stroke="#FFFDF9" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <h3 className="font-[family-name:var(--font-heading)] text-xl font-semibold mb-3" style={{ color: '#2B2118' }}>
+                Dibuat dengan Cinta
+              </h3>
+              <p style={{ color: '#5C4A3D' }}>
+                Setiap cangkir diseduh dengan penuh perhatian oleh barista berpengalaman kami.
+              </p>
+            </div>
+
+            {/* Card 3 - Berkelanjutan */}
+            <div 
+              className="group p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              style={{ backgroundColor: '#FFFDF9', border: '1px solid #E0D6C8' }}
+            >
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                style={{ backgroundColor: '#6F4E37' }}
+              >
+                {/* Plant/Leaf Sustainability Icon */}
+                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 22V12" stroke="#FFFDF9" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M12 12C12 12 7 10 7 6C7 2 12 2 12 2C12 2 17 2 17 6C17 10 12 12 12 12Z" stroke="#FFFDF9" strokeWidth="1.5"/>
+                  <path d="M8 18C8 18 4 18 4 14C4 10 8 10 8 10" stroke="#FFFDF9" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M16 18C16 18 20 18 20 14C20 10 16 10 16 10" stroke="#FFFDF9" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <h3 className="font-[family-name:var(--font-heading)] text-xl font-semibold mb-3" style={{ color: '#2B2118' }}>
+                Berkelanjutan
+              </h3>
+              <p style={{ color: '#5C4A3D' }}>
+                Kami berkomitmen pada praktik ramah lingkungan dan mendukung kesejahteraan petani.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 
+        =====================================================
+        CTA SECTION
+        =====================================================
+      */}
+      <section 
+        className="py-24 relative overflow-hidden"
+        style={{ background: 'linear-gradient(180deg, #F5EFE6 0%, #EBE4D8 50%, #D8CFC0 100%)' }}
+      >
+        <div 
+          className="absolute top-10 right-10 w-48 h-48 rounded-full blur-3xl opacity-20"
+          style={{ backgroundColor: '#7A8450' }}
+        />
+        
+        <div className="container relative z-10 text-center">
+          <p className="font-semibold tracking-widest uppercase text-sm mb-3" style={{ color: '#7A8450' }}>
+            Mulai Sekarang
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <h2 
+            className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl lg:text-5xl font-bold mb-6"
+            style={{ color: '#2B2118' }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
+            Siap Memulai Ceritamu?
+          </h2>
+          <p className="text-lg mb-10 max-w-2xl mx-auto" style={{ color: '#5C4A3D' }}>
+            Pesan sekarang dan nikmati kopi favoritmu. Tersedia pickup dan delivery.
+          </p>
+          
           <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/menu"
+            className="inline-flex items-center px-10 py-5 font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 text-lg"
+            style={{ backgroundColor: '#7A8450', color: '#FFFDF9' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5F6840'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#7A8450'}
           >
-            Documentation
+            <span>Pesan Sekarang</span>
+            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
           </a>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* 
+        =====================================================
+        FOOTER - Gradual transition, tidak langsung gelap
+        =====================================================
+      */}
+      <footer 
+        className="py-20"
+        style={{ 
+          background: `linear-gradient(180deg, 
+            #D8CFC0 0%, 
+            #C9BDA8 15%, 
+            #B5A68E 30%, 
+            #A08E74 50%, 
+            #8B7A5F 70%, 
+            #7A6B4F 85%, 
+            #6F5F45 100%
+          )` 
+        }}
+      >
+        <div className="container">
+          <div className="text-center">
+            <h3 
+              className="font-[family-name:var(--font-heading)] text-3xl font-bold mb-3"
+              style={{ color: '#2B2118' }}
+            >
+              Kopi Cerita
+            </h3>
+            <p className="text-lg mb-8" style={{ color: '#5C4A3D' }}>
+              Setiap kopi punya cerita
+            </p>
+            
+            {/* Social links */}
+            <div className="flex justify-center gap-4 mb-8">
+              {['IG', 'TT', 'WA'].map((icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                  style={{ backgroundColor: 'rgba(111,78,55,0.2)', color: '#2B2118' }}
+                >
+                  <span className="text-xs font-semibold">{icon}</span>
+                </a>
+              ))}
+            </div>
+            
+            <div className="pt-8" style={{ borderTop: '1px solid rgba(43,33,24,0.15)' }}>
+              <p className="text-sm" style={{ color: '#5C4A3D' }}>
+                © 2026 Kopi Cerita. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }
