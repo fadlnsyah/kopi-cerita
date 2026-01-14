@@ -1,14 +1,18 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useSession } from 'next-auth/react';
+import { useAuthModal } from './AuthModalContext';
 
 // Types
 export interface CartItem {
-  id: string;
+  id: string;        // CartItem ID from database
+  productId: string; // Product ID
   name: string;
   price: number;
   quantity: number;
   category: string;
+  image?: string | null;
 }
 
 interface CartContextType {
@@ -19,57 +23,129 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  isLoading: boolean;
+  refreshCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { data: session, status } = useSession();
+  const { showLoginModal, setPendingAction } = useAuthModal();
 
-  // Load cart from localStorage on mount
-  useEffect(() => {
-    const savedCart = localStorage.getItem('kopi-cerita-cart');
-    if (savedCart) {
-      setItems(JSON.parse(savedCart));
+  // Fetch cart dari API
+  const fetchCart = useCallback(async () => {
+    if (status !== 'authenticated') {
+      setItems([]);
+      return;
     }
-  }, []);
 
-  // Save cart to localStorage whenever it changes
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/cart');
+      if (response.ok) {
+        const data = await response.json();
+        setItems(data.items || []);
+      }
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [status]);
+
+  // Load cart saat session berubah
   useEffect(() => {
-    localStorage.setItem('kopi-cerita-cart', JSON.stringify(items));
-  }, [items]);
+    if (status === 'authenticated') {
+      fetchCart();
+    } else if (status === 'unauthenticated') {
+      setItems([]);
+    }
+  }, [status, fetchCart]);
 
   const addToCart = (product: { id: string; name: string; price: number; category: string }) => {
-    setItems(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+    // Jika belum login, tampilkan modal dan simpan action
+    if (status !== 'authenticated') {
+      setPendingAction(() => () => addToCartAPI(product));
+      showLoginModal();
+      return;
+    }
+
+    addToCartAPI(product);
+  };
+
+  const addToCartAPI = async (product: { id: string; name: string; price: number; category: string }) => {
+    try {
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id, quantity: 1 }),
+      });
+
+      if (response.ok) {
+        // Refresh cart untuk mendapat data terbaru
+        await fetchCart();
+      } else {
+        const data = await response.json();
+        console.error('Error adding to cart:', data.error);
       }
-      return [...prev, { ...product, quantity: 1 }];
-    });
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
   };
 
-  const removeFromCart = (id: string) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+  const removeFromCart = async (id: string) => {
+    if (status !== 'authenticated') return;
+
+    try {
+      const response = await fetch(`/api/cart?itemId=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setItems(prev => prev.filter(item => item.id !== id));
+      }
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+    }
   };
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const updateQuantity = async (id: string, quantity: number) => {
+    if (status !== 'authenticated') return;
+
     if (quantity <= 0) {
       removeFromCart(id);
       return;
     }
-    setItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    );
+
+    try {
+      const response = await fetch('/api/cart', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId: id, quantity }),
+      });
+
+      if (response.ok) {
+        setItems(prev =>
+          prev.map(item =>
+            item.id === id ? { ...item, quantity } : item
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+    }
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
+    if (status !== 'authenticated') return;
+
+    // Hapus semua items satu per satu
+    for (const item of items) {
+      await removeFromCart(item.id);
+    }
     setItems([]);
   };
 
@@ -85,6 +161,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clearCart,
       totalItems,
       totalPrice,
+      isLoading,
+      refreshCart: fetchCart,
     }}>
       {children}
     </CartContext.Provider>

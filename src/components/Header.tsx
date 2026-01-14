@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { useSession, signOut } from 'next-auth/react';
 
 /**
  * Header Component - Kopi Cerita
@@ -12,6 +13,7 @@ import { useCart } from '@/context/CartContext';
  * - Logo di kiri
  * - Navigation links di tengah/kanan
  * - Cart icon dengan badge
+ * - User menu (login/profile dropdown)
  * - Mobile hamburger menu
  */
 
@@ -24,7 +26,9 @@ const navLinks = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { totalItems } = useCart();
+  const { data: session, status } = useSession();
 
   // Detect scroll untuk mengubah style header
   useEffect(() => {
@@ -35,6 +39,23 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.user-menu-container')) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut({ redirect: true, callbackUrl: '/' });
+  };
 
   return (
     <header
@@ -87,14 +108,53 @@ export default function Header() {
               )}
             </Link>
 
-            {/* CTA Button */}
-            <Link
-              href="/menu"
-              className="px-6 py-2.5 font-semibold rounded-lg transition-all duration-300 hover:shadow-md"
-              style={{ backgroundColor: '#6F4E37', color: '#FFFDF9' }}
-            >
-              Pesan
-            </Link>
+            {/* User Authentication */}
+            {status === 'loading' ? (
+              <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+            ) : session ? (
+              // Logged in - Show user menu
+              <div className="relative user-menu-container">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors duration-300 hover:bg-[#EBE4D8]"
+                  style={{ color: '#5C4A3D' }}
+                >
+                  <span className="font-medium">{session.user?.name?.split(' ')[0]}</span>
+                  <svg className={`w-4 h-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <div 
+                    className="absolute right-0 mt-2 w-48 py-2 rounded-lg shadow-lg"
+                    style={{ backgroundColor: '#FFFDF9', border: '1px solid #E0D6C8' }}
+                  >
+                    <div className="px-4 py-2 border-b" style={{ borderColor: '#E0D6C8' }}>
+                      <p className="font-medium" style={{ color: '#2B2118' }}>{session.user?.name}</p>
+                      <p className="text-sm" style={{ color: '#8B7355' }}>{session.user?.email}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 transition-colors hover:bg-[#F5EFE6]"
+                      style={{ color: '#DC2626' }}
+                    >
+                      Keluar
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Not logged in - Show login button
+              <Link
+                href="/login"
+                className="px-6 py-2.5 font-semibold rounded-lg transition-all duration-300 hover:shadow-md"
+                style={{ backgroundColor: '#6F4E37', color: '#FFFDF9' }}
+              >
+                Masuk
+              </Link>
+            )}
           </div>
 
           {/* Mobile Right Section */}
@@ -140,7 +200,7 @@ export default function Header() {
         {/* Mobile Menu Dropdown */}
         <div
           className={`md:hidden overflow-hidden transition-all duration-300 ${
-            isMobileMenuOpen ? 'max-h-80 pb-6' : 'max-h-0'
+            isMobileMenuOpen ? 'max-h-96 pb-6' : 'max-h-0'
           }`}
         >
           <div className="flex flex-col gap-4 pt-4 border-t" style={{ borderColor: '#E0D6C8' }}>
@@ -156,15 +216,34 @@ export default function Header() {
               </Link>
             ))}
             
-            {/* Mobile CTA Button */}
-            <Link
-              href="/menu"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="px-6 py-3 font-semibold rounded-lg text-center transition-all duration-300 mt-2"
-              style={{ backgroundColor: '#6F4E37', color: '#FFFDF9' }}
-            >
-              Pesan Sekarang
-            </Link>
+            {/* Mobile Auth Section */}
+            {session ? (
+              <>
+                <div className="py-2 border-t" style={{ borderColor: '#E0D6C8' }}>
+                  <p className="font-medium" style={{ color: '#2B2118' }}>{session.user?.name}</p>
+                  <p className="text-sm" style={{ color: '#8B7355' }}>{session.user?.email}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="py-2 text-left font-medium"
+                  style={{ color: '#DC2626' }}
+                >
+                  Keluar
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="px-6 py-3 font-semibold rounded-lg text-center transition-all duration-300 mt-2"
+                style={{ backgroundColor: '#6F4E37', color: '#FFFDF9' }}
+              >
+                Masuk
+              </Link>
+            )}
           </div>
         </div>
       </div>

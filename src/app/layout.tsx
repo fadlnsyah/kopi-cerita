@@ -3,6 +3,9 @@ import { Lora, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import { CartProvider } from "@/context/CartContext";
+import { AuthModalProvider } from "@/context/AuthModalContext";
+import AuthProvider from "@/components/AuthProvider";
+import LoginModal from "@/components/LoginModal";
 
 /**
  * Source Sans 3 - Font untuk body text
@@ -56,12 +59,16 @@ export default function RootLayout({
   return (
     <html lang="id" className={`${sourceSans.variable} ${lora.variable}`}>
       <body className="antialiased">
-        <CartProvider>
-          <Header />
-          {children}
-        </CartProvider>
+        <AuthProvider>
+          <AuthModalProvider>
+            <CartProvider>
+              <Header />
+              {children}
+              <LoginModal />
+            </CartProvider>
+          </AuthModalProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
-

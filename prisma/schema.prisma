@@ -25,6 +25,7 @@ model Product {
   
   // Relations
   orderItems  OrderItem[]
+  cartItems   CartItem[]
 }
 
 model Category {
@@ -41,6 +42,7 @@ model Category {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  password  String   // Hashed password menggunakan bcrypt
   name      String
   phone     String?
   address   String?
@@ -49,6 +51,30 @@ model User {
   
   // Relations
   orders    Order[]
+  cart      Cart?
+}
+
+// ==========================================
+// CART
+// ==========================================
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+
+  @@unique([cartId, productId]) // Satu product hanya sekali per cart
 }
 
 // ==========================================
