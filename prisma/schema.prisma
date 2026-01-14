@@ -102,3 +102,27 @@ model OrderItem {
   quantity  Int
   price     Int     // Harga saat order (bisa beda dari harga produk sekarang)
 }
+
+// ==========================================
+// SITE SETTINGS
+// ==========================================
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique  // e.g., "hero_title", "instagram_url"
+  value     String   @db.Text
+  category  String   // "homepage", "social", "general"
+  updatedAt DateTime @updatedAt
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String?
+  image     String?
+  link      String?
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

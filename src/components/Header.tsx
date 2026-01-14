@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useSession, signOut } from 'next-auth/react';
 
@@ -15,6 +16,7 @@ import { useSession, signOut } from 'next-auth/react';
  * - Cart icon dengan badge
  * - User menu (login/profile dropdown)
  * - Mobile hamburger menu
+ * - Admin redirect ke admin panel
  */
 
 const navLinks = [
@@ -24,11 +26,19 @@ const navLinks = [
 ];
 
 export default function Header() {
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { totalItems } = useCart();
   const { data: session, status } = useSession();
+
+  // Redirect admin ke admin panel
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'admin') {
+      router.push('/admin');
+    }
+  }, [session, status, router]);
 
   // Detect scroll untuk mengubah style header
   useEffect(() => {

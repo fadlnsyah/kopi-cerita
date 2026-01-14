@@ -39,7 +39,20 @@ export default function LoginPage() {
       if (result?.error) {
         setError(result.error);
       } else {
-        // Redirect ke menu setelah login berhasil
+        // Fetch session untuk cek role
+        const sessionRes = await fetch('/api/auth/session');
+        const session = await sessionRes.json();
+        
+        // Jika admin, redirect ke admin login
+        if (session?.user?.role === 'admin') {
+          setError('Akun admin tidak bisa login di sini. Gunakan halaman Admin Login.');
+          // Sign out admin
+          await fetch('/api/auth/signout', { method: 'POST' });
+          setIsLoading(false);
+          return;
+        }
+        
+        // User biasa redirect ke menu
         router.push('/menu');
         router.refresh();
       }
@@ -153,6 +166,18 @@ export default function LoginPage() {
             style={{ color: '#6F4E37' }}
           >
             Daftar sekarang
+          </Link>
+        </p>
+
+        {/* Admin Link */}
+        <p className="mt-4 text-center text-sm" style={{ color: '#8B7355' }}>
+          Admin?{' '}
+          <Link 
+            href="/admin/login" 
+            className="hover:underline"
+            style={{ color: '#6F4E37' }}
+          >
+            Login ke Admin Panel
           </Link>
         </p>
       </div>

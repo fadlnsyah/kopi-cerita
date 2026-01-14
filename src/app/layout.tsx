@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { Lora, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import { CartProvider } from "@/context/CartContext";
-import { AuthModalProvider } from "@/context/AuthModalContext";
 import AuthProvider from "@/components/AuthProvider";
-import LoginModal from "@/components/LoginModal";
 
 /**
  * Source Sans 3 - Font untuk body text
@@ -50,6 +46,9 @@ export const metadata: Metadata = {
 
 /**
  * Root Layout
+ * 
+ * Layout paling dasar - hanya html, body, fonts, dan AuthProvider
+ * Header dan CartProvider ada di masing-masing route group
  */
 export default function RootLayout({
   children,
@@ -60,13 +59,7 @@ export default function RootLayout({
     <html lang="id" className={`${sourceSans.variable} ${lora.variable}`}>
       <body className="antialiased">
         <AuthProvider>
-          <AuthModalProvider>
-            <CartProvider>
-              <Header />
-              {children}
-              <LoginModal />
-            </CartProvider>
-          </AuthModalProvider>
+          {children}
         </AuthProvider>
       </body>
     </html>
