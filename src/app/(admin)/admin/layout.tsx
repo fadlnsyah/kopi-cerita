@@ -5,21 +5,22 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
+import { useOrderNotification } from '@/hooks/useOrderNotification';
 
 /**
  * Admin Layout
  * 
  * Layout khusus untuk halaman admin dengan:
- * - Sidebar navigation
+ * - Sidebar navigation dengan badge notifikasi
  * - Auth check (redirect jika bukan admin)
+ * - Toast notification untuk order baru
  * - Coffee theme (warna coklat)
- * - Completely separated from user layout
  */
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: 'chart' },
   { href: '/admin/products', label: 'Produk', icon: 'box' },
-  { href: '/admin/orders', label: 'Pesanan', icon: 'cart' },
+  { href: '/admin/orders', label: 'Pesanan', icon: 'cart', showBadge: true },
   { href: '/admin/settings', label: 'Pengaturan', icon: 'settings' },
 ];
 
@@ -64,6 +65,9 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  // Order notification hook
+  const { pendingCount, hasNewOrder, dismissNotification } = useOrderNotification();
 
   // Jika di halaman login admin, render children langsung tanpa layout
   const isLoginPage = pathname === '/admin/login';
@@ -108,6 +112,28 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen flex font-[family-name:var(--font-body)]" style={{ backgroundColor: '#F5EFE6' }}>
+      {/* Toast Notification for New Order */}
+      {hasNewOrder && (
+        <div 
+          className="fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg flex items-center gap-3 animate-bounce"
+          style={{ backgroundColor: '#22C55E', color: '#FFFDF9' }}
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          <div>
+            <p className="font-bold">Pesanan Baru!</p>
+            <p className="text-sm">Ada pesanan baru masuk</p>
+          </div>
+          <button
+            onClick={dismissNotification}
+            className="ml-2 hover:opacity-80"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside
         className={`fixed left-0 top-0 h-full transition-all duration-300 z-40 shadow-lg ${
@@ -141,7 +167,7 @@ export default function AdminLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative"
                 style={{ 
                   color: isActive ? '#FFFDF9' : '#E0D6C8',
                   backgroundColor: isActive ? '#6F4E37' : 'transparent',
@@ -149,6 +175,16 @@ export default function AdminLayout({
               >
                 <NavIcon type={item.icon} />
                 {isSidebarOpen && <span>{item.label}</span>}
+                
+                {/* Badge for Pending Orders */}
+                {item.showBadge && pendingCount > 0 && (
+                  <span 
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold"
+                    style={{ backgroundColor: '#F59E0B', color: '#FFFDF9' }}
+                  >
+                    {pendingCount > 9 ? '9+' : pendingCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -184,6 +220,23 @@ export default function AdminLayout({
             Admin Panel
           </h1>
           <div className="flex items-center gap-4">
+            {/* Notification Bell */}
+            {pendingCount > 0 && (
+              <Link 
+                href="/admin/orders" 
+                className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="#6F4E37" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span 
+                  className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold"
+                  style={{ backgroundColor: '#F59E0B', color: '#FFFDF9' }}
+                >
+                  {pendingCount > 9 ? '9+' : pendingCount}
+                </span>
+              </Link>
+            )}
             <span style={{ color: '#5C4A3D' }}>{session.user?.name}</span>
             <div
               className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"

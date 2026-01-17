@@ -20,6 +20,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState('');
+  const [error, setError] = useState('');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -36,16 +37,30 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError('');
 
-    // Simulasi order (nanti connect ke API)
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Generate order ID
-    const newOrderId = 'KC' + Date.now().toString().slice(-8);
-    setOrderId(newOrderId);
-    setOrderSuccess(true);
-    clearCart();
-    setIsSubmitting(false);
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: formData.notes }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Gagal membuat pesanan');
+      }
+
+      // Order berhasil dibuat
+      setOrderId(data.orderId);
+      setOrderSuccess(true);
+      clearCart();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Redirect jika cart kosong dan belum sukses
@@ -148,6 +163,15 @@ export default function CheckoutPage() {
         <div className="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {/* Form */}
           <div className="lg:col-span-2">
+            {/* Error Message */}
+            {error && (
+              <div 
+                className="mb-6 p-4 rounded-xl text-center"
+                style={{ backgroundColor: '#FEE2E2', color: '#DC2626' }}
+              >
+                {error}
+              </div>
+            )}
             <form onSubmit={handleSubmit}>
               <div 
                 className="p-6 rounded-xl mb-6"

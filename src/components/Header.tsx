@@ -21,6 +21,8 @@ import { useSession, signOut } from 'next-auth/react';
 
 const navLinks = [
   { href: '/menu', label: 'Menu' },
+  { href: '/orders', label: 'Pesanan' },
+  { href: '/wishlist', label: 'Wishlist' },
   { href: '/about', label: 'Tentang' },
   { href: '/contact', label: 'Kontak' },
 ];

@@ -52,12 +52,12 @@ export const authOptions: NextAuthOptions = {
   // Konfigurasi session
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 hari
+    maxAge: 60, // 1 menit - session akan expire dan user harus login ulang
   },
 
   // Konfigurasi JWT
   jwt: {
-    maxAge: 30 * 24 * 60 * 60, // 30 hari
+    maxAge: 60, // 1 menit - token akan expire
   },
 
   // Custom pages

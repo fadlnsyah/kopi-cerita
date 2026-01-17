@@ -12,20 +12,22 @@ datasource db {
 // ==========================================
 
 model Product {
-  id          String      @id @default(cuid())
-  name        String
-  description String
-  price       Int
-  category    String
-  image       String?
-  isPopular   Boolean     @default(false)
-  isNew       Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id              String      @id @default(cuid())
+  name            String
+  description     String
+  price           Int
+  category        String
+  image           String?
+  isPopular       Boolean     @default(false)
+  isNew           Boolean     @default(false)
+  discountPercent Int?        // Diskon dalam persen (10 = 10%)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
   
   // Relations
-  orderItems  OrderItem[]
-  cartItems   CartItem[]
+  orderItems      OrderItem[]
+  cartItems       CartItem[]
+  wishlists       Wishlist[]
 }
 
 model Category {
@@ -40,18 +42,19 @@ model Category {
 // ==========================================
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String   // Hashed password menggunakan bcrypt
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String     // Hashed password menggunakan bcrypt
   name      String
   phone     String?
   address   String?
-  role      String   @default("customer") // customer, admin
-  createdAt DateTime @default(now())
+  role      String     @default("customer") // customer, admin
+  createdAt DateTime   @default(now())
   
   // Relations
   orders    Order[]
   cart      Cart?
+  wishlists Wishlist[]
 }
 
 // ==========================================
@@ -125,4 +128,36 @@ model Banner {
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// WISHLIST
+// ==========================================
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// ==========================================
+// COUPON / PROMO
+// ==========================================
+
+model Coupon {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  discount    Int      // Persentase diskon (10 = 10%)
+  minPurchase Int?     // Minimal pembelian (optional)
+  maxUses     Int?     // Maksimal penggunaan (optional)
+  usedCount   Int      @default(0)
+  validFrom   DateTime
+  validUntil  DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
 }
