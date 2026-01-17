@@ -2,13 +2,14 @@ import Header from "@/components/Header";
 import { CartProvider } from "@/context/CartContext";
 import { AuthModalProvider } from "@/context/AuthModalContext";
 import { WishlistProvider } from "@/context/WishlistContext";
+import { ToastProvider } from "@/context/ToastContext";
 import LoginModal from "@/components/LoginModal";
 
 /**
  * Main Layout untuk User/Customer
  * 
  * Layout untuk semua halaman customer (bukan admin)
- * Include: Header, Cart, Wishlist, Login Modal
+ * Include: Header, Cart, Wishlist, Toast, Login Modal
  */
 export default function MainLayout({
   children,
@@ -17,14 +18,17 @@ export default function MainLayout({
 }) {
   return (
     <AuthModalProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <Header />
-          {children}
-          <LoginModal />
-        </WishlistProvider>
-      </CartProvider>
+      <ToastProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <Header />
+            {children}
+            <LoginModal />
+          </WishlistProvider>
+        </CartProvider>
+      </ToastProvider>
     </AuthModalProvider>
   );
 }
+
 

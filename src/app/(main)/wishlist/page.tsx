@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
-import { CoffeeCupIcon } from '@/components/Icons';
+import { EmptyWishlist } from '@/components/EmptyState';
 
 interface Product {
   id: string;
@@ -96,37 +95,7 @@ export default function WishlistPage() {
 
         {/* Wishlist Products */}
         {products.length === 0 ? (
-          <div className="max-w-md mx-auto text-center py-16">
-            <div 
-              className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"
-              style={{ backgroundColor: '#FEE2E2' }}
-            >
-              <svg className="w-12 h-12" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
-                />
-              </svg>
-            </div>
-            <h2 
-              className="font-[family-name:var(--font-heading)] text-2xl font-bold mb-4"
-              style={{ color: '#2B2118' }}
-            >
-              Wishlist Kosong
-            </h2>
-            <p className="mb-8" style={{ color: '#5C4A3D' }}>
-              Kamu belum menyimpan produk favorit. Klik icon ❤️ di produk untuk menambahkannya.
-            </p>
-            <Link
-              href="/menu"
-              className="inline-block px-8 py-4 font-semibold rounded-xl transition-all hover:shadow-lg"
-              style={{ backgroundColor: '#6F4E37', color: '#FFFDF9' }}
-            >
-              Jelajahi Menu
-            </Link>
-          </div>
+          <EmptyWishlist />
         ) : (
           <>
             <p className="text-center mb-8" style={{ color: '#5C4A3D' }}>

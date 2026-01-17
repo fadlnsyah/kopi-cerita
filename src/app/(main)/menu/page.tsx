@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import ProductCard from '@/components/ProductCard';
+import { ProductGridSkeleton } from '@/components/Skeleton';
 import { GridIcon, CoffeeCupIcon, PourOverIcon, LeafIcon, PastryIcon } from '@/components/Icons';
 
 // Type untuk Product dari database
@@ -273,12 +274,14 @@ export default function MenuPage() {
           })}
         </div>
 
-        {/* Loading State */}
+        {/* Loading State - Skeleton */}
         {loading ? (
-          <div className="text-center py-16">
-            <div className="inline-block w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#6F4E37', borderTopColor: 'transparent' }}></div>
-            <p className="mt-4" style={{ color: '#5C4A3D' }}>Memuat menu...</p>
-          </div>
+          <>
+            <p className="text-center mb-8" style={{ color: '#5C4A3D' }}>
+              Memuat menu...
+            </p>
+            <ProductGridSkeleton count={8} />
+          </>
         ) : (
           <>
             {/* Product Count & Clear Filters */}

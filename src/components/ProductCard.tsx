@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CoffeeCupIcon, PourOverIcon, LeafIcon, PastryIcon } from './Icons';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useToast } from '@/context/ToastContext';
 import { useSession } from 'next-auth/react';
 
 interface Product {
@@ -42,8 +43,10 @@ export default function ProductCard({ product }: { product: Product }) {
   const IconComponent = getCategoryIcon(product.category);
   const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const { success } = useToast();
   const { status: authStatus } = useSession();
   const [isAdded, setIsAdded] = useState(false);
+  const [isHeartAnimating, setIsHeartAnimating] = useState(false);
 
   const isWishlisted = isInWishlist(product.id);
   
@@ -57,22 +60,28 @@ export default function ProductCard({ product }: { product: Product }) {
     addToCart({
       id: product.id,
       name: product.name,
-      price: discountedPrice, // Use discounted price
+      price: discountedPrice,
       category: product.category,
     });
     
-    // Show feedback
+    // Show feedback with toast
     setIsAdded(true);
+    success(`${product.name} ditambahkan ke keranjang`);
     setTimeout(() => setIsAdded(false), 1500);
   };
 
   const handleWishlistToggle = () => {
     if (authStatus !== 'authenticated') return;
     
+    // Trigger animation
+    setIsHeartAnimating(true);
+    setTimeout(() => setIsHeartAnimating(false), 400);
+    
     if (isWishlisted) {
       removeFromWishlist(product.id);
     } else {
       addToWishlist(product.id);
+      success(`${product.name} ditambahkan ke wishlist`);
     }
   };
 
