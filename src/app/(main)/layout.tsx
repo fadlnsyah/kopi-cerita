@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { CartProvider } from "@/context/CartContext";
 import { AuthModalProvider } from "@/context/AuthModalContext";
 import { WishlistProvider } from "@/context/WishlistContext";
@@ -23,6 +24,7 @@ export default function MainLayout({
           <WishlistProvider>
             <Header />
             {children}
+            <Footer />
             <LoginModal />
           </WishlistProvider>
         </CartProvider>

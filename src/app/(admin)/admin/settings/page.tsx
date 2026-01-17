@@ -1,97 +1,115 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
-interface Settings {
-  homepage: Record<string, string>;
-  social: Record<string, string>;
+interface Setting {
+  id: string;
+  key: string;
+  value: string;
+  label: string;
+  group: string;
+  type: string;
 }
 
-const homepageFields = [
-  { key: 'hero_title', label: 'Judul Hero', placeholder: 'Setiap Kopi Punya Cerita' },
-  { key: 'hero_subtitle', label: 'Subtitle Hero', placeholder: 'Nikmati pengalaman ngopi yang berbeda...' },
-  { key: 'hero_cta', label: 'Teks Tombol CTA', placeholder: 'Pesan Sekarang' },
-  { key: 'about_text', label: 'Teks About', placeholder: 'Deskripsi singkat tentang Kopi Cerita' },
-];
-
-const socialFields = [
-  { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/kopicerita', icon: '📷' },
-  { key: 'whatsapp', label: 'WhatsApp', placeholder: '6281234567890', icon: '💬' },
-  { key: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/kopicerita', icon: '👍' },
-  { key: 'tiktok', label: 'TikTok', placeholder: 'https://tiktok.com/@kopicerita', icon: '🎵' },
-  { key: 'twitter', label: 'Twitter/X', placeholder: 'https://twitter.com/kopicerita', icon: '🐦' },
-];
+const groupLabels: Record<string, { label: string; description: string }> = {
+  identity: { 
+    label: '🏪 Identitas Toko', 
+    description: 'Nama, tagline, dan deskripsi toko' 
+  },
+  contact: { 
+    label: '📞 Kontak', 
+    description: 'Email, telepon, dan alamat toko' 
+  },
+  social: { 
+    label: '📱 Media Sosial', 
+    description: 'Link media sosial (kosongkan jika tidak ada)' 
+  },
+  footer: { 
+    label: '📝 Footer', 
+    description: 'Teks yang muncul di bagian bawah website' 
+  },
+};
 
 /**
- * Admin Settings Page
+ * Admin Settings Page - Pengaturan Toko
  */
 export default function AdminSettingsPage() {
-  const [activeTab, setActiveTab] = useState<'homepage' | 'social'>('homepage');
-  const [settings, setSettings] = useState<Settings>({
-    homepage: {},
-    social: {},
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [settings, setSettings] = useState<Setting[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('identity');
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Fetch settings
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        const data = await response.json();
+        setSettings(data.settings || []);
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchSettings();
   }, []);
 
-  const fetchSettings = async () => {
-    try {
-      const response = await fetch('/api/admin/settings');
-      if (response.ok) {
-        const data = await response.json();
-        setSettings(data.settings);
-      }
-    } catch (error) {
-      console.error('Error fetching settings:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleChange = (category: 'homepage' | 'social', key: string, value: string) => {
-    setSettings({
-      ...settings,
-      [category]: {
-        ...settings[category],
-        [key]: value,
-      },
-    });
-    setMessage({ type: '', text: '' });
+  const handleChange = (key: string, value: string) => {
+    setSettings((prev) =>
+      prev.map((s) => (s.key === key ? { ...s, value } : s))
+    );
+    setMessage(null);
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
-    setMessage({ type: '', text: '' });
+    setSaving(true);
+    setMessage(null);
 
     try {
-      const response = await fetch('/api/admin/settings', {
+      const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings }),
+        body: JSON.stringify({
+          settings: settings.map((s) => ({ key: s.key, value: s.value })),
+        }),
       });
 
       if (response.ok) {
         setMessage({ type: 'success', text: 'Pengaturan berhasil disimpan!' });
       } else {
-        setMessage({ type: 'error', text: 'Gagal menyimpan pengaturan' });
+        throw new Error('Failed to save');
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      setMessage({ type: 'error', text: 'Terjadi kesalahan' });
+      setMessage({ type: 'error', text: 'Gagal menyimpan pengaturan' });
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
 
-  if (isLoading) {
+  // Group settings
+  const groupedSettings = settings.reduce((acc, setting) => {
+    if (!acc[setting.group]) {
+      acc[setting.group] = [];
+    }
+    acc[setting.group].push(setting);
+    return acc;
+  }, {} as Record<string, Setting[]>);
+
+  const tabs = ['identity', 'contact', 'social', 'footer'];
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div style={{ color: '#5C4A3D' }}>Memuat pengaturan...</div>
+        <div className="text-center">
+          <div 
+            className="inline-block w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" 
+            style={{ borderColor: '#6F4E37', borderTopColor: 'transparent' }}
+          />
+          <p className="mt-4" style={{ color: '#5C4A3D' }}>Memuat pengaturan...</p>
+        </div>
       </div>
     );
   }
@@ -100,116 +118,117 @@ export default function AdminSettingsPage() {
     <div className="max-w-3xl space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)]" style={{ color: '#2B2118' }}>Pengaturan</h2>
-        <p className="font-[family-name:var(--font-body)]" style={{ color: '#5C4A3D' }}>Kelola tampilan dan informasi website</p>
+        <h2 
+          className="text-2xl font-bold font-[family-name:var(--font-heading)]" 
+          style={{ color: '#2B2118' }}
+        >
+          ⚙️ Pengaturan Toko
+        </h2>
+        <p style={{ color: '#5C4A3D' }}>
+          Kelola identitas, kontak, dan media sosial toko
+        </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setActiveTab('homepage')}
-          className="px-4 py-2 rounded-lg font-medium transition-colors"
-          style={activeTab === 'homepage'
-            ? { backgroundColor: '#6F4E37', color: '#FFFDF9' }
-            : { backgroundColor: '#E0D6C8', color: '#5C4A3D' }
-          }
-        >
-          🏠 Homepage
-        </button>
-        <button
-          onClick={() => setActiveTab('social')}
-          className="px-4 py-2 rounded-lg font-medium transition-colors"
-          style={activeTab === 'social'
-            ? { backgroundColor: '#6F4E37', color: '#FFFDF9' }
-            : { backgroundColor: '#E0D6C8', color: '#5C4A3D' }
-          }
-        >
-          🔗 Social Media
-        </button>
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className="px-4 py-2 rounded-lg font-medium transition-all"
+            style={activeTab === tab
+              ? { backgroundColor: '#6F4E37', color: '#FFFDF9' }
+              : { backgroundColor: '#E0D6C8', color: '#5C4A3D' }
+            }
+          >
+            {groupLabels[tab]?.label || tab}
+          </button>
+        ))}
       </div>
 
       {/* Message */}
-      {message.text && (
-        <div
-          className="p-4 rounded-lg"
-          style={message.type === 'success'
-            ? { backgroundColor: '#D1FAE5', color: '#059669' }
-            : { backgroundColor: '#FEE2E2', color: '#DC2626' }
-          }
+      {message && (
+        <div 
+          className="p-4 rounded-xl animate-fade-in-up"
+          style={{ 
+            backgroundColor: message.type === 'success' ? '#D1FAE5' : '#FEE2E2',
+            color: message.type === 'success' ? '#059669' : '#DC2626',
+          }}
         >
           {message.text}
         </div>
       )}
 
-      {/* Content */}
+      {/* Settings Form */}
       <div
-        className="p-6 rounded-xl space-y-6 shadow-sm"
+        className="p-6 rounded-xl shadow-sm"
         style={{ backgroundColor: '#FFFDF9', border: '1px solid #E0D6C8' }}
       >
-        {activeTab === 'homepage' && (
-          <>
-            <h3 className="text-lg font-semibold" style={{ color: '#2B2118' }}>Pengaturan Homepage</h3>
-            <div className="space-y-4">
-              {homepageFields.map((field) => (
-                <div key={field.key}>
-                  <label className="block mb-2" style={{ color: '#5C4A3D' }}>{field.label}</label>
-                  {field.key === 'about_text' ? (
-                    <textarea
-                      value={settings.homepage[field.key] || ''}
-                      onChange={(e) => handleChange('homepage', field.key, e.target.value)}
-                      rows={4}
-                      className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 resize-none"
-                      style={{ borderColor: '#E0D6C8', backgroundColor: '#FFFDF9', color: '#2B2118' }}
-                      placeholder={field.placeholder}
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      value={settings.homepage[field.key] || ''}
-                      onChange={(e) => handleChange('homepage', field.key, e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2"
-                      style={{ borderColor: '#E0D6C8', backgroundColor: '#FFFDF9', color: '#2B2118' }}
-                      placeholder={field.placeholder}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        <h3 
+          className="text-lg font-semibold mb-2" 
+          style={{ color: '#2B2118' }}
+        >
+          {groupLabels[activeTab]?.label}
+        </h3>
+        <p className="text-sm mb-6" style={{ color: '#8B7355' }}>
+          {groupLabels[activeTab]?.description}
+        </p>
 
-        {activeTab === 'social' && (
-          <>
-            <h3 className="text-lg font-semibold" style={{ color: '#2B2118' }}>Social Media Links</h3>
-            <div className="space-y-4">
-              {socialFields.map((field) => (
-                <div key={field.key}>
-                  <label className="block mb-2" style={{ color: '#5C4A3D' }}>
-                    {field.icon} {field.label}
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.social[field.key] || ''}
-                    onChange={(e) => handleChange('social', field.key, e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2"
-                    style={{ borderColor: '#E0D6C8', backgroundColor: '#FFFDF9', color: '#2B2118' }}
-                    placeholder={field.placeholder}
-                  />
-                </div>
-              ))}
+        <div className="space-y-4">
+          {groupedSettings[activeTab]?.map((setting) => (
+            <div key={setting.key}>
+              <label 
+                className="block text-sm font-medium mb-2"
+                style={{ color: '#5C4A3D' }}
+              >
+                {setting.label}
+              </label>
+              {setting.type === 'textarea' ? (
+                <textarea
+                  value={setting.value}
+                  onChange={(e) => handleChange(setting.key, e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl border outline-none transition-all focus:shadow-md resize-none"
+                  style={{ 
+                    borderColor: '#E0D6C8',
+                    backgroundColor: '#F5EFE6',
+                    color: '#2B2118',
+                  }}
+                />
+              ) : (
+                <input
+                  type={setting.type === 'email' ? 'email' : setting.type === 'url' ? 'url' : 'text'}
+                  value={setting.value}
+                  onChange={(e) => handleChange(setting.key, e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border outline-none transition-all focus:shadow-md"
+                  style={{ 
+                    borderColor: '#E0D6C8',
+                    backgroundColor: '#F5EFE6',
+                    color: '#2B2118',
+                  }}
+                  placeholder={setting.type === 'url' ? 'https://...' : ''}
+                />
+              )}
             </div>
-          </>
-        )}
+          ))}
+        </div>
 
         {/* Save Button */}
-        <div className="pt-4" style={{ borderTop: '1px solid #E0D6C8' }}>
+        <div className="mt-6 pt-6" style={{ borderTop: '1px solid #E0D6C8' }}>
           <button
             onClick={handleSave}
-            disabled={isSaving}
-            className="px-6 py-3 rounded-lg font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
-            style={{ backgroundColor: '#6F4E37' }}
+            disabled={saving}
+            className="px-6 py-3 rounded-xl font-semibold transition-all hover:shadow-lg disabled:opacity-50"
+            style={{ backgroundColor: '#6F4E37', color: '#FFFDF9' }}
           >
-            {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
+            {saving ? (
+              <span className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
+                Menyimpan...
+              </span>
+            ) : (
+              '💾 Simpan Perubahan'
+            )}
           </button>
         </div>
       </div>

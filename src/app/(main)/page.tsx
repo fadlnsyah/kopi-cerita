@@ -251,54 +251,75 @@ export default function HomePage() {
         FOOTER - Gradual transition, tidak langsung gelap
         =====================================================
       */}
-      <footer 
-        className="py-20"
-        style={{ 
-          background: `linear-gradient(180deg, 
-            #D8CFC0 0%, 
-            #C9BDA8 15%, 
-            #B5A68E 30%, 
-            #A08E74 50%, 
-            #8B7A5F 70%, 
-            #7A6B4F 85%, 
-            #6F5F45 100%
-          )` 
-        }}
+      {/* 
+        =====================================================
+        GALLERY SECTION
+        =====================================================
+      */}
+      <section 
+        className="py-24"
+        style={{ background: 'linear-gradient(180deg, #D8CFC0 0%, #A69080 100%)' }}
       >
         <div className="container">
-          <div className="text-center">
-            <h3 
-              className="font-[family-name:var(--font-heading)] text-3xl font-bold mb-3"
+          <div className="text-center mb-12">
+            <h2 
+              className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold mb-4"
               style={{ color: '#2B2118' }}
             >
-              Kopi Cerita
-            </h3>
-            <p className="text-lg mb-8" style={{ color: '#5C4A3D' }}>
-              Setiap kopi punya cerita
+              Galeri Kami
+            </h2>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: '#5C4A3D' }}>
+              Intip suasana kedai dan momen-momen seru bersama pelanggan kami.
             </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[200px]">
+            {/* Gallery Items - Using colored placeholders for now */}
             
-            {/* Social links */}
-            <div className="flex justify-center gap-4 mb-8">
-              {['IG', 'TT', 'WA'].map((icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
-                  style={{ backgroundColor: 'rgba(111,78,55,0.2)', color: '#2B2118' }}
-                >
-                  <span className="text-xs font-semibold">{icon}</span>
-                </a>
-              ))}
+            {/* Item 1 - Large */}
+            <div className="col-span-2 row-span-2 relative group overflow-hidden rounded-2xl">
+              <div className="absolute inset-0 bg-[#6F4E37] opacity-80 group-hover:scale-110 transition-transform duration-500"></div>
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20">
+                <span className="text-white font-medium border border-white/50 px-4 py-2 rounded-full backdrop-blur-sm">Suasana Kedai</span>
+              </div>
             </div>
-            
-            <div className="pt-8" style={{ borderTop: '1px solid rgba(43,33,24,0.15)' }}>
-              <p className="text-sm" style={{ color: '#5C4A3D' }}>
-                © 2026 Kopi Cerita. All rights reserved.
-              </p>
+
+            {/* Item 2 */}
+            <div className="relative group overflow-hidden rounded-2xl">
+               <div className="absolute inset-0 bg-[#A08E74] opacity-80 group-hover:scale-110 transition-transform duration-500"></div>
+            </div>
+
+            {/* Item 3 */}
+             <div className="relative group overflow-hidden rounded-2xl">
+               <div className="absolute inset-0 bg-[#8B7A5F] opacity-80 group-hover:scale-110 transition-transform duration-500"></div>
+            </div>
+
+            {/* Item 4 */}
+             <div className="relative group overflow-hidden rounded-2xl">
+               <div className="absolute inset-0 bg-[#7A6B4F] opacity-80 group-hover:scale-110 transition-transform duration-500"></div>
+            </div>
+
+            {/* Item 5 */}
+             <div className="relative group overflow-hidden rounded-2xl">
+               <div className="absolute inset-0 bg-[#5C4A3D] opacity-80 group-hover:scale-110 transition-transform duration-500"></div>
             </div>
           </div>
+          
+          <div className="text-center mt-12">
+             <a
+              href="https://instagram.com/kopicerita"
+              target="_blank"
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-2 text-[#6F4E37] font-semibold hover:gap-4 transition-all"
+            >
+              <span>Lihat Lebih Banyak di Instagram</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
+          </div>
         </div>
-      </footer>
+      </section>
     </main>
   );
 }
