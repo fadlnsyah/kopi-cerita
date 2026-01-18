@@ -12,6 +12,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import ExportReport from '@/components/admin/ExportReport';
 
 interface Stats {
   totalOrders: number;
@@ -265,6 +266,9 @@ export default function AdminDashboard() {
           </table>
         </div>
       </div>
+
+      {/* Export Report */}
+      <ExportReport />
     </div>
   );
 }
