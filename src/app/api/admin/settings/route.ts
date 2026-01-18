@@ -20,15 +20,17 @@ export async function GET() {
 
     const allSettings = await prisma.siteSetting.findMany();
 
-    // Group by category
+    // Group by group field
     const settings: Record<string, Record<string, string>> = {
-      homepage: {},
+      identity: {},
+      contact: {},
       social: {},
+      footer: {},
     };
 
     allSettings.forEach((setting) => {
-      if (settings[setting.category]) {
-        settings[setting.category][setting.key] = setting.value;
+      if (settings[setting.group]) {
+        settings[setting.group][setting.key] = setting.value;
       }
     });
 
@@ -70,14 +72,14 @@ export async function PUT(request: Request) {
     // Update or create each setting
     const updates: Promise<unknown>[] = [];
 
-    for (const category of Object.keys(settings)) {
-      for (const key of Object.keys(settings[category])) {
-        const value = settings[category][key];
+    for (const group of Object.keys(settings)) {
+      for (const key of Object.keys(settings[group])) {
+        const value = settings[group][key];
         updates.push(
           prisma.siteSetting.upsert({
             where: { key },
-            update: { value, category },
-            create: { key, value, category },
+            update: { value, group },
+            create: { key, value, group, label: key, type: 'text' },
           })
         );
       }
