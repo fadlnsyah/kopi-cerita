@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -14,6 +14,13 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
+interface AppliedCoupon {
+  id: string;
+  code: string;
+  discount: number;
+  discountAmount: number;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalItems, totalPrice, clearCart } = useCart();
@@ -22,8 +29,13 @@ export default function CheckoutPage() {
   const [orderId, setOrderId] = useState('');
   const [error, setError] = useState('');
   
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [couponError, setCouponError] = useState('');
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  
   const [formData, setFormData] = useState({
-    name: '',
     phone: '',
     email: '',
     orderType: 'dine-in', // dine-in atau takeaway
@@ -33,6 +45,48 @@ export default function CheckoutPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
+  
+  // Validate and apply coupon
+  const handleApplyCoupon = useCallback(async () => {
+    if (!couponCode.trim()) return;
+    
+    setIsValidatingCoupon(true);
+    setCouponError('');
+    
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          code: couponCode.trim(), 
+          subtotal: totalPrice 
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Kupon tidak valid');
+      }
+      
+      setAppliedCoupon(data.coupon);
+      setCouponCode('');
+    } catch (err) {
+      setCouponError(err instanceof Error ? err.message : 'Kupon tidak valid');
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  }, [couponCode, totalPrice]);
+  
+  const handleRemoveCoupon = useCallback(() => {
+    setAppliedCoupon(null);
+    setCouponError('');
+  }, []);
+  
+  // Calculate final total
+  const serviceFee = 2000;
+  const discountAmount = appliedCoupon?.discountAmount || 0;
+  const finalTotal = totalPrice + serviceFee - discountAmount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,22 +241,6 @@ export default function CheckoutPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2" style={{ color: '#2B2118' }}>
-                      Nama Lengkap *
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 rounded-xl border outline-none transition-all focus:shadow-md"
-                      style={{ borderColor: '#E0D6C8', backgroundColor: '#FFFDF9', color: '#2B2118' }}
-                      placeholder="Masukkan nama Anda"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#2B2118' }}>
                       Nomor WhatsApp *
                     </label>
                     <input
@@ -349,6 +387,61 @@ export default function CheckoutPage() {
               </div>
 
               <hr className="my-4" style={{ borderColor: '#E0D6C8' }} />
+              
+              {/* Coupon Input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#5C4A3D' }}>
+                  Kode Promo
+                </label>
+                {appliedCoupon ? (
+                  <div 
+                    className="flex items-center justify-between p-3 rounded-lg"
+                    style={{ backgroundColor: '#F0FDF4', border: '1px solid #22C55E' }}
+                  >
+                    <div>
+                      <span className="font-mono font-semibold" style={{ color: '#16A34A' }}>
+                        {appliedCoupon.code}
+                      </span>
+                      <span className="text-sm ml-2" style={{ color: '#22C55E' }}>
+                        (-{appliedCoupon.discount}%)
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleRemoveCoupon}
+                      className="text-sm hover:underline"
+                      style={{ color: '#DC2626' }}
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Masukkan kode"
+                      className="flex-1 px-3 py-2 rounded-lg border outline-none text-sm font-mono uppercase"
+                      style={{ borderColor: '#E0D6C8', backgroundColor: '#FFFDF9', color: '#2B2118' }}
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={isValidatingCoupon || !couponCode.trim()}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      style={{ backgroundColor: '#7A8450', color: '#FFFDF9' }}
+                    >
+                      {isValidatingCoupon ? '...' : 'Pakai'}
+                    </button>
+                  </div>
+                )}
+                {couponError && (
+                  <p className="text-sm mt-2" style={{ color: '#DC2626' }}>
+                    {couponError}
+                  </p>
+                )}
+              </div>
+
+              <hr className="my-4" style={{ borderColor: '#E0D6C8' }} />
 
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -357,15 +450,21 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: '#5C4A3D' }}>Biaya Layanan</span>
-                  <span style={{ color: '#2B2118' }}>{formatPrice(2000)}</span>
+                  <span style={{ color: '#2B2118' }}>{formatPrice(serviceFee)}</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between">
+                    <span style={{ color: '#22C55E' }}>Diskon ({appliedCoupon.discount}%)</span>
+                    <span style={{ color: '#22C55E' }}>-{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
               </div>
 
               <hr className="my-4" style={{ borderColor: '#E0D6C8' }} />
 
               <div className="flex justify-between font-bold text-lg">
                 <span style={{ color: '#2B2118' }}>Total</span>
-                <span style={{ color: '#6F4E37' }}>{formatPrice(totalPrice + 2000)}</span>
+                <span style={{ color: '#6F4E37' }}>{formatPrice(finalTotal)}</span>
               </div>
 
               <Link

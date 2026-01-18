@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { CoffeeCupIcon, PourOverIcon, LeafIcon, PastryIcon } from './Icons';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useToast } from '@/context/ToastContext';
 import { useSession } from 'next-auth/react';
+import StarRating from './StarRating';
 
 interface Product {
   id: string;
@@ -17,6 +19,8 @@ interface Product {
   isPopular: boolean;
   isNew: boolean;
   discountPercent?: number | null;
+  averageRating?: number | null;
+  reviewCount?: number;
 }
 
 // Format harga ke Rupiah
@@ -90,9 +94,10 @@ export default function ProductCard({ product }: { product: Product }) {
       className="group rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
       style={{ backgroundColor: '#FFFDF9', border: '1px solid #E0D6C8' }}
     >
-      {/* Image atau Icon Placeholder */}
-      <div 
-        className="aspect-square flex items-center justify-center relative overflow-hidden"
+      {/* Image atau Icon Placeholder - Clickable */}
+      <Link 
+        href={`/product/${product.id}`}
+        className="aspect-square flex items-center justify-center relative overflow-hidden block"
         style={{ backgroundColor: '#EBE4D8' }}
       >
         {product.image ? (
@@ -103,7 +108,7 @@ export default function ProductCard({ product }: { product: Product }) {
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
         ) : (
-          <IconComponent className="w-16 h-16 opacity-40" color="#6F4E37" />
+          <IconComponent className="w-16 h-16 opacity-40 transition-transform duration-300 group-hover:scale-110" color="#6F4E37" />
         )}
         
         {/* Badges */}
@@ -158,7 +163,7 @@ export default function ProductCard({ product }: { product: Product }) {
             </svg>
           </button>
         )}
-      </div>
+      </Link>
 
       {/* Content */}
       <div className="p-4">
@@ -168,6 +173,17 @@ export default function ProductCard({ product }: { product: Product }) {
         >
           {product.name}
         </h3>
+        {/* Rating Display */}
+        {product.averageRating && product.averageRating > 0 && (
+          <div className="mb-2">
+            <StarRating 
+              rating={product.averageRating} 
+              size="sm" 
+              showCount 
+              count={product.reviewCount || 0} 
+            />
+          </div>
+        )}
         <p 
           className="text-sm mb-3 line-clamp-2"
           style={{ color: '#5C4A3D' }}

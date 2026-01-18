@@ -1,5 +1,7 @@
 'use client';
 
+import FavoriteProducts from '@/components/FavoriteProducts';
+
 /**
  * Landing Page - Kopi Cerita
  * 
@@ -90,6 +92,13 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 
+        =====================================================
+        FAVORITE PRODUCTS SECTION
+        =====================================================
+      */}
+      <FavoriteProducts />
 
       {/* 
         =====================================================

@@ -21,6 +21,8 @@ model Product {
   isPopular       Boolean     @default(false)
   isNew           Boolean     @default(false)
   discountPercent Int?        // Diskon dalam persen (10 = 10%)
+  averageRating   Float?      // Rating rata-rata (1-5)
+  reviewCount     Int         @default(0)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   
@@ -28,6 +30,8 @@ model Product {
   orderItems      OrderItem[]
   cartItems       CartItem[]
   wishlists       Wishlist[]
+  reviews         Review[]
+  modifiers       ProductModifier[]
 }
 
 model Category {
@@ -42,19 +46,22 @@ model Category {
 // ==========================================
 
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  password  String     // Hashed password menggunakan bcrypt
-  name      String
-  phone     String?
-  address   String?
-  role      String     @default("customer") // customer, admin
-  createdAt DateTime   @default(now())
+  id         String     @id @default(cuid())
+  email      String     @unique
+  password   String     // Hashed password menggunakan bcrypt
+  name       String
+  phone      String?
+  address    String?
+  role       String     @default("customer") // customer, admin
+  points     Int        @default(0)          // Loyalty points
+  memberTier String     @default("bronze")   // bronze, silver, gold
+  createdAt  DateTime   @default(now())
   
   // Relations
   orders    Order[]
   cart      Cart?
   wishlists Wishlist[]
+  reviews   Review[]
 }
 
 // ==========================================
@@ -76,8 +83,9 @@ model CartItem {
   productId String
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
+  modifiers Json?   // Customization: {size: "Large", sugar: "50%", toppings: [...]}
 
-  @@unique([cartId, productId]) // Satu product hanya sekali per cart
+  @@unique([cartId, productId])
 }
 
 // ==========================================
@@ -94,6 +102,9 @@ model Order {
   notes       String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  
+  // Relations
+  reviews     Review[]
 }
 
 model OrderItem {
@@ -103,7 +114,8 @@ model OrderItem {
   productId String
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
-  price     Int     // Harga saat order (bisa beda dari harga produk sekarang)
+  price     Int       // Harga saat order (bisa beda dari harga produk sekarang)
+  modifiers Json?     // Customization snapshot at order time
 }
 
 // ==========================================
@@ -168,4 +180,57 @@ model SiteSetting {
   type      String   @default("text") // text, textarea, url, email, phone
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// REVIEWS
+// ==========================================
+
+model Review {
+  id          String   @id @default(cuid())
+  userId      String
+  productId   String
+  orderId     String?  // For "Verified Purchase" badge
+  rating      Int      // 1-5 stars
+  comment     String?  @db.Text
+  isVerified  Boolean  @default(false) // Verified purchase
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order       Order?   @relation(fields: [orderId], references: [id])
+  
+  @@unique([userId, productId]) // One review per user per product
+}
+
+// ==========================================
+// PRODUCT MODIFIERS (Customization)
+// ==========================================
+
+model ProductModifier {
+  id        String  @id @default(cuid())
+  productId String
+  name      String  // "Size", "Sugar Level", "Topping"
+  type      String  @default("single") // single (radio) or multi (checkbox)
+  required  Boolean @default(false)
+  options   Json    // [{label: "Regular", price: 0}, {label: "Large", price: 5000}]
+  sortOrder Int     @default(0)
+  
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// NOTIFICATIONS
+// ==========================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // order_status, promo, loyalty
+  title     String
+  message   String   @db.Text
+  data      Json?    // Additional data like orderId
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

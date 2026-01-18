@@ -146,7 +146,9 @@ export async function GET() {
           include: {
             product: {
               select: {
+                id: true,
                 name: true,
+                category: true,
               },
             },
           },

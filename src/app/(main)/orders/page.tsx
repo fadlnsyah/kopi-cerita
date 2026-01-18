@@ -1,16 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CoffeeCupIcon, PourOverIcon, LeafIcon, PastryIcon } from '@/components/Icons';
+import { useToast } from '@/context/ToastContext';
+import ReviewForm from '@/components/ReviewForm';
 
 interface OrderItem {
   id: string;
+  productId: string;
   quantity: number;
   price: number;
   product: {
+    id: string;
     name: string;
     category: string;
   };
@@ -72,9 +76,39 @@ function getCategoryIcon(category: string) {
 export default function OrdersPage() {
   const { status: authStatus } = useSession();
   const router = useRouter();
+  const { success, error: showError } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [reorderingId, setReorderingId] = useState<string | null>(null);
+  const [reviewingProduct, setReviewingProduct] = useState<{
+    orderId: string;
+    productId: string;
+    productName: string;
+  } | null>(null);
+  
+  // Handle reorder
+  const handleReorder = useCallback(async (orderId: string) => {
+    setReorderingId(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/reorder`, {
+        method: 'POST',
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal menambahkan ke keranjang');
+      }
+      
+      success(`${data.itemCount} item ditambahkan ke keranjang!`);
+      router.push('/cart');
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+    } finally {
+      setReorderingId(null);
+    }
+  }, [success, showError, router]);
 
   // Redirect jika belum login
   useEffect(() => {
@@ -307,9 +341,24 @@ export default function OrdersPage() {
                                   {formatPrice(item.price)} x {item.quantity}
                                 </p>
                               </div>
-                              <p className="font-medium" style={{ color: '#2B2118' }}>
-                                {formatPrice(item.price * item.quantity)}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium" style={{ color: '#2B2118' }}>
+                                  {formatPrice(item.price * item.quantity)}
+                                </p>
+                                {order.status === 'delivered' && (
+                                  <button
+                                    onClick={() => setReviewingProduct({
+                                      orderId: order.id,
+                                      productId: item.product.id,
+                                      productName: item.product.name,
+                                    })}
+                                    className="px-2 py-1 text-xs font-medium rounded-lg transition-colors hover:opacity-80"
+                                    style={{ backgroundColor: '#F59E0B', color: '#FFFDF9' }}
+                                  >
+                                    ⭐ Review
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           );
                         })}
@@ -333,6 +382,27 @@ export default function OrdersPage() {
                           {formatPrice(order.total)}
                         </span>
                       </div>
+                      
+                      {/* Order Again Button */}
+                      {(order.status === 'delivered' || order.status === 'cancelled') && (
+                        <button
+                          onClick={() => handleReorder(order.id)}
+                          disabled={reorderingId === order.id}
+                          className="w-full mt-4 py-3 font-semibold rounded-xl transition-all hover:shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+                          style={{ backgroundColor: '#6F4E37', color: '#FFFDF9' }}
+                        >
+                          {reorderingId === order.id ? (
+                            <span>Menambahkan...</span>
+                          ) : (
+                            <>
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              <span>Pesan Lagi</span>
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -341,6 +411,39 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+      
+      {/* Review Modal */}
+      {reviewingProduct && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={() => setReviewingProduct(null)}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div 
+              className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 pointer-events-auto"
+              style={{ backgroundColor: '#FFFDF9' }}
+            >
+              <button
+                onClick={() => setReviewingProduct(null)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+              <ReviewForm
+                productId={reviewingProduct.productId}
+                productName={reviewingProduct.productName}
+                orderId={reviewingProduct.orderId}
+                onSuccess={() => {
+                  setReviewingProduct(null);
+                  success('Review berhasil dikirim!');
+                }}
+                onCancel={() => setReviewingProduct(null)}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </main>
   );
 }
