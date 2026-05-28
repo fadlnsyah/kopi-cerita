@@ -23,6 +23,10 @@ interface Order {
     id: string;
     quantity: number;
     price: number;
+    modifiers: {
+      name: string;
+      options: { label: string; price: number }[];
+    }[] | null;
     product: {
       name: string;
     };
@@ -272,6 +276,11 @@ export default function AdminOrdersPage() {
                     >
                       <span style={{ color: '#5C4A3D' }}>
                         {item.product.name} x{item.quantity}
+                        {item.modifiers && item.modifiers.length > 0 && (
+                          <span className="block text-xs mt-1" style={{ color: '#8B7355' }}>
+                            {item.modifiers.map((modifier) => `${modifier.name}: ${modifier.options.map((option) => option.label).join(', ')}`).join(' | ')}
+                          </span>
+                        )}
                       </span>
                       <span style={{ color: '#2B2118' }}>
                         {formatCurrency(item.price * item.quantity)}

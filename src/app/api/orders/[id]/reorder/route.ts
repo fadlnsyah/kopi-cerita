@@ -1,7 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { Prisma } from '@prisma/client';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+
+type ModifierSnapshot = {
+  name: string;
+  options: { label: string }[];
+};
+
+function getModifiersHash(modifiers: ModifierSnapshot[]) {
+  return JSON.stringify(
+    modifiers
+      .map((modifier) => ({
+        name: modifier.name,
+        options: modifier.options.map((option) => option.label).sort(),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  );
+}
 
 // POST /api/orders/[id]/reorder - Re-add order items to cart
 export async function POST(
@@ -56,11 +73,14 @@ export async function POST(
     
     // Add each item to cart
     for (const item of order.items) {
+      const modifiers = (item.modifiers as ModifierSnapshot[] | null) || [];
+      const modifiersHash = getModifiersHash(modifiers);
       const existingCartItem = await prisma.cartItem.findUnique({
         where: {
-          cartId_productId: {
+          cartId_productId_modifiersHash: {
             cartId: cart.id,
             productId: item.productId,
+            modifiersHash,
           },
         },
       });
@@ -78,6 +98,8 @@ export async function POST(
             cartId: cart.id,
             productId: item.productId,
             quantity: item.quantity,
+            modifiersHash,
+            modifiers: modifiers.length > 0 ? modifiers as unknown as Prisma.InputJsonValue : undefined,
           },
         });
       }

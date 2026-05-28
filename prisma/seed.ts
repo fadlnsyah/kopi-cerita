@@ -42,6 +42,53 @@ async function main() {
     ]
   });
 
+  const drinkProducts = await prisma.product.findMany({
+    where: {
+      category: { in: ['espresso', 'manual-brew', 'non-coffee'] },
+    },
+    select: { id: true },
+  });
+
+  await prisma.productModifier.createMany({
+    data: drinkProducts.flatMap((product) => [
+      {
+        productId: product.id,
+        name: 'Ukuran',
+        type: 'single',
+        required: true,
+        options: [
+          { label: 'Regular', price: 0 },
+          { label: 'Large', price: 5000 },
+        ],
+        sortOrder: 1,
+      },
+      {
+        productId: product.id,
+        name: 'Gula',
+        type: 'single',
+        required: true,
+        options: [
+          { label: 'Normal', price: 0 },
+          { label: '50%', price: 0 },
+          { label: 'Tanpa Gula', price: 0 },
+        ],
+        sortOrder: 2,
+      },
+      {
+        productId: product.id,
+        name: 'Tambahan',
+        type: 'multi',
+        required: false,
+        options: [
+          { label: 'Extra Shot', price: 6000 },
+          { label: 'Oat Milk', price: 8000 },
+          { label: 'Caramel', price: 4000 },
+        ],
+        sortOrder: 3,
+      },
+    ]),
+  });
+
   console.log('✅ Seed berhasil!');
 }
 

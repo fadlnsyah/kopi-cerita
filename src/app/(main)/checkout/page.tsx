@@ -379,10 +379,19 @@ export default function CheckoutPage() {
 
               <div className="space-y-3 mb-4">
                 {items.map(item => (
-                  <div key={item.id} className="flex justify-between text-sm">
-                    <span style={{ color: '#5C4A3D' }}>
-                      {item.name} x{item.quantity}
-                    </span>
+                  <div key={item.id} className="flex justify-between gap-3 text-sm">
+                    <div style={{ color: '#5C4A3D' }}>
+                      <span>{item.name} x{item.quantity}</span>
+                      {item.modifiers && item.modifiers.length > 0 && (
+                        <div className="mt-1 space-y-0.5">
+                          {item.modifiers.map((modifier) => (
+                            <p key={modifier.name} className="text-xs" style={{ color: '#8B7355' }}>
+                              {modifier.name}: {modifier.options.map((option) => option.label).join(', ')}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <span style={{ color: '#2B2118' }}>
                       {formatPrice(item.price * item.quantity)}
                     </span>

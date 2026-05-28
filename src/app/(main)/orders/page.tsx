@@ -13,6 +13,10 @@ interface OrderItem {
   productId: string;
   quantity: number;
   price: number;
+  modifiers: {
+    name: string;
+    options: { label: string; price: number }[];
+  }[] | null;
   product: {
     id: string;
     name: string;
@@ -340,6 +344,15 @@ export default function OrdersPage() {
                                 <p className="text-sm" style={{ color: '#8B7355' }}>
                                   {formatPrice(item.price)} x {item.quantity}
                                 </p>
+                                {item.modifiers && item.modifiers.length > 0 && (
+                                  <div className="mt-1 space-y-0.5">
+                                    {item.modifiers.map((modifier) => (
+                                      <p key={modifier.name} className="text-xs" style={{ color: '#8B7355' }}>
+                                        {modifier.name}: {modifier.options.map((option) => option.label).join(', ')}
+                                      </p>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                               <div className="flex items-center gap-2">
                                 <p className="font-medium" style={{ color: '#2B2118' }}>

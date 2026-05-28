@@ -15,11 +15,21 @@ export interface CartItem {
   quantity: number;
   category: string;
   image?: string | null;
+  modifiers?: CartModifier[];
+}
+
+export interface CartModifier {
+  name: string;
+  type: string;
+  options: { label: string; price: number }[];
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: { id: string; name: string; price: number; category: string }) => void;
+  addToCart: (
+    product: { id: string; name: string; price: number; category: string },
+    options?: { quantity?: number; modifiers?: Record<string, string | string[]> }
+  ) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -67,23 +77,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [status, fetchCart]);
 
-  const addToCart = (product: { id: string; name: string; price: number; category: string }) => {
+  const addToCart = (
+    product: { id: string; name: string; price: number; category: string },
+    options: { quantity?: number; modifiers?: Record<string, string | string[]> } = {}
+  ) => {
     // Jika belum login, tampilkan modal dan simpan action
     if (status !== 'authenticated') {
-      setPendingAction(() => () => addToCartAPI(product));
+      setPendingAction(() => () => addToCartAPI(product, options));
       showLoginModal();
       return;
     }
 
-    addToCartAPI(product);
+    addToCartAPI(product, options);
   };
 
-  const addToCartAPI = async (product: { id: string; name: string; price: number; category: string }) => {
+  const addToCartAPI = async (
+    product: { id: string; name: string; price: number; category: string },
+    options: { quantity?: number; modifiers?: Record<string, string | string[]> } = {}
+  ) => {
     try {
       const response = await fetch('/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product.id, quantity: 1 }),
+        body: JSON.stringify({
+          productId: product.id,
+          quantity: options.quantity || 1,
+          modifiers: options.modifiers || {},
+        }),
       });
 
       if (response.ok) {

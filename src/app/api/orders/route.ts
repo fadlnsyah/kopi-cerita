@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { Prisma } from '@prisma/client';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+
+type ModifierSnapshot = {
+  name: string;
+  type: string;
+  options: { label: string; price: number }[];
+};
 
 function getEffectivePrice(product: { price: number; discountPercent: number | null }) {
   if (product.discountPercent && product.discountPercent > 0) {
@@ -9,6 +16,13 @@ function getEffectivePrice(product: { price: number; discountPercent: number | n
   }
 
   return product.price;
+}
+
+function getModifierPrice(modifiers: ModifierSnapshot[]) {
+  return modifiers.reduce(
+    (sum, modifier) => sum + modifier.options.reduce((optionSum, option) => optionSum + option.price, 0),
+    0
+  );
 }
 
 /**
@@ -80,11 +94,11 @@ export async function POST(request: Request) {
 
     const pricedItems = cart.items.map((item) => ({
       ...item,
-      effectivePrice: getEffectivePrice(item.product),
+      effectivePrice: getEffectivePrice(item.product) + getModifierPrice((item.modifiers as ModifierSnapshot[] | null) || []),
     }));
 
-    const subtotal = cart.items.reduce(
-      (sum, item) => sum + getEffectivePrice(item.product) * item.quantity,
+    const subtotal = pricedItems.reduce(
+      (sum, item) => sum + item.effectivePrice * item.quantity,
       0
     );
     const serviceFee = 2000;
@@ -148,9 +162,10 @@ export async function POST(request: Request) {
           notes: notes || null,
           items: {
             create: pricedItems.map((item) => ({
-              productId: item.productId,
+              product: { connect: { id: item.productId } },
               quantity: item.quantity,
               price: item.effectivePrice,
+              modifiers: item.modifiers ? item.modifiers as Prisma.InputJsonValue : undefined,
             })),
           },
         },
@@ -188,6 +203,7 @@ export async function POST(request: Request) {
         name: item.product.name,
         quantity: item.quantity,
         price: item.price,
+        modifiers: item.modifiers,
       })),
     });
   } catch (error) {

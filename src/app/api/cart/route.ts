@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { Prisma } from '@prisma/client';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+
+type ModifierOption = { label: string; price: number };
+type ModifierSnapshot = {
+  name: string;
+  type: string;
+  options: ModifierOption[];
+};
 
 function getEffectivePrice(product: { price: number; discountPercent: number | null }) {
   if (product.discountPercent && product.discountPercent > 0) {
@@ -9,6 +17,85 @@ function getEffectivePrice(product: { price: number; discountPercent: number | n
   }
 
   return product.price;
+}
+
+function getModifiersHash(modifiers: ModifierSnapshot[]) {
+  return JSON.stringify(
+    modifiers
+      .map((modifier) => ({
+        name: modifier.name,
+        options: modifier.options.map((option) => option.label).sort(),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  );
+}
+
+function getModifierPrice(modifiers: ModifierSnapshot[]) {
+  return modifiers.reduce(
+    (sum, modifier) => sum + modifier.options.reduce((optionSum, option) => optionSum + option.price, 0),
+    0
+  );
+}
+
+function parseModifierOptions(options: Prisma.JsonValue): ModifierOption[] {
+  if (!Array.isArray(options)) return [];
+
+  return options
+    .map((option) => {
+      if (!option || typeof option !== 'object' || Array.isArray(option)) return null;
+      const record = option as Record<string, unknown>;
+      if (typeof record.label !== 'string') return null;
+
+      return {
+        label: record.label,
+        price: typeof record.price === 'number' ? record.price : 0,
+      };
+    })
+    .filter((option): option is ModifierOption => Boolean(option));
+}
+
+function normalizeModifiers(
+  productModifiers: { name: string; type: string; required: boolean; options: Prisma.JsonValue }[],
+  selectedModifiers: Record<string, string | string[]>
+) {
+  const snapshots: ModifierSnapshot[] = [];
+
+  for (const modifier of productModifiers) {
+    const options = parseModifierOptions(modifier.options);
+    const selected = selectedModifiers[modifier.name];
+    const selectedLabels = Array.isArray(selected)
+      ? selected
+      : selected
+        ? [selected]
+        : [];
+
+    if (modifier.required && selectedLabels.length === 0) {
+      throw new Error(`${modifier.name} wajib dipilih`);
+    }
+
+    if (modifier.type !== 'multi' && selectedLabels.length > 1) {
+      throw new Error(`${modifier.name} hanya boleh memilih satu opsi`);
+    }
+
+    const selectedOptions = selectedLabels.map((label) => {
+      const option = options.find((item) => item.label === label);
+      if (!option) {
+        throw new Error(`Opsi ${label} tidak valid untuk ${modifier.name}`);
+      }
+
+      return option;
+    });
+
+    if (selectedOptions.length > 0) {
+      snapshots.push({
+        name: modifier.name,
+        type: modifier.type,
+        options: selectedOptions,
+      });
+    }
+  }
+
+  return snapshots;
 }
 
 /**
@@ -74,12 +161,13 @@ export async function GET() {
       id: item.id,
       productId: item.productId,
       name: item.product.name,
-      price: getEffectivePrice(item.product),
+      price: getEffectivePrice(item.product) + getModifierPrice((item.modifiers as ModifierSnapshot[] | null) || []),
       originalPrice: item.product.price,
       discountPercent: item.product.discountPercent,
       category: item.product.category,
       image: item.product.image,
       quantity: item.quantity,
+      modifiers: item.modifiers || [],
     }));
 
     return NextResponse.json({ items: cartItems });
@@ -109,7 +197,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { productId, quantity = 1 } = body;
+    const { productId, quantity = 1, modifiers = {} } = body;
 
     if (!productId) {
       return NextResponse.json(
@@ -118,9 +206,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      return NextResponse.json(
+        { error: 'Quantity tidak valid' },
+        { status: 400 }
+      );
+    }
+
     // Cek apakah product ada
     const product = await prisma.product.findUnique({
       where: { id: productId },
+      include: {
+        modifiers: {
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
     });
 
     if (!product) {
@@ -141,12 +241,24 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    let normalizedModifiers: ModifierSnapshot[];
+    try {
+      normalizedModifiers = normalizeModifiers(product.modifiers, modifiers);
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Modifier tidak valid' },
+        { status: 400 }
+      );
+    }
+    const modifiersHash = getModifiersHash(normalizedModifiers);
+
     // Cek apakah item sudah ada di cart
     const existingItem = await prisma.cartItem.findUnique({
       where: {
-        cartId_productId: {
+        cartId_productId_modifiersHash: {
           cartId: cart.id,
           productId: productId,
+          modifiersHash,
         },
       },
     });
@@ -164,6 +276,8 @@ export async function POST(request: NextRequest) {
           cartId: cart.id,
           productId: productId,
           quantity: quantity,
+          modifiersHash,
+          modifiers: normalizedModifiers as unknown as Prisma.InputJsonValue,
         },
       });
     }

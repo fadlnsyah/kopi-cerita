@@ -114,6 +114,15 @@ export default function CartPage() {
                     <p className="text-sm mb-2" style={{ color: '#5C4A3D' }}>
                       {formatPrice(item.price)} / item
                     </p>
+                    {item.modifiers && item.modifiers.length > 0 && (
+                      <div className="mb-3 space-y-1">
+                        {item.modifiers.map((modifier) => (
+                          <p key={modifier.name} className="text-xs" style={{ color: '#8B7355' }}>
+                            {modifier.name}: {modifier.options.map((option) => option.label).join(', ')}
+                          </p>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Quantity Controls */}
                     <div className="flex items-center gap-3">

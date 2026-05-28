@@ -127,7 +127,9 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
   // Calculate total price with modifiers
   const calculateTotalPrice = useCallback(() => {
     if (!product) return 0;
-    let total = product.price;
+    let total = product.discountPercent
+      ? Math.round(product.price * (1 - product.discountPercent / 100))
+      : product.price;
     
     modifiers.forEach(mod => {
       const selected = selectedModifiers[mod.name];
@@ -152,15 +154,17 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
     
     setIsLoading(true);
     try {
-      // Add to cart (quantity handled separately via multiple adds or extending addToCart)
-      for (let i = 0; i < quantity; i++) {
-        addToCart({
+      addToCart(
+        {
           id: product.id,
           name: product.name,
-          price: product.price,
+          price: product.discountPercent
+            ? Math.round(product.price * (1 - product.discountPercent / 100))
+            : product.price,
           category: product.category,
-        });
-      }
+        },
+        { quantity, modifiers: selectedModifiers }
+      );
       
       success(`${product.name} ditambahkan ke keranjang!`);
       onClose();
@@ -173,7 +177,7 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
   
   const IconComponent = getCategoryIcon(product.category);
   const discountedPrice = product.discountPercent 
-    ? product.price - (product.price * product.discountPercent / 100)
+    ? Math.round(product.price * (1 - product.discountPercent / 100))
     : product.price;
   
   return (

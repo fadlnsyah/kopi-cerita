@@ -31,6 +31,15 @@ interface Product {
   averageRating: number | null;
   reviewCount: number;
   discountPercent: number | null;
+  modifiers: Modifier[];
+}
+
+interface Modifier {
+  id: string;
+  name: string;
+  type: string;
+  required: boolean;
+  options: { label: string; price: number }[];
 }
 
 function getCategoryIcon(category: string) {
@@ -69,12 +78,20 @@ export default function ProductDetailPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [selectedModifiers, setSelectedModifiers] = useState<Record<string, string | string[]>>({});
   
   const fetchProduct = useCallback(async () => {
     try {
       const res = await fetch(`/api/products/${productId}`);
       const data = await res.json();
       setProduct(data.product);
+      const defaults: Record<string, string | string[]> = {};
+      data.product?.modifiers?.forEach((modifier: Modifier) => {
+        if (modifier.required && modifier.options.length > 0) {
+          defaults[modifier.name] = modifier.options[0].label;
+        }
+      });
+      setSelectedModifiers(defaults);
     } catch (error) {
       console.error('Error fetching product:', error);
     } finally {
@@ -101,17 +118,32 @@ export default function ProductDetailPage() {
   
   const handleAddToCart = () => {
     if (!product) return;
-    for (let i = 0; i < quantity; i++) {
-      addToCart({
+    addToCart(
+      {
         id: product.id,
         name: product.name,
         price: product.discountPercent 
           ? Math.round(product.price * (1 - product.discountPercent / 100))
           : product.price,
         category: product.category,
-      });
-    }
+      },
+      { quantity, modifiers: selectedModifiers }
+    );
     success(`${product.name} ditambahkan ke keranjang!`);
+  };
+
+  const handleModifierChange = (modifierName: string, value: string, type: string) => {
+    setSelectedModifiers((prev) => {
+      if (type === 'multi') {
+        const current = (prev[modifierName] as string[]) || [];
+        if (current.includes(value)) {
+          return { ...prev, [modifierName]: current.filter((item) => item !== value) };
+        }
+        return { ...prev, [modifierName]: [...current, value] };
+      }
+
+      return { ...prev, [modifierName]: value };
+    });
   };
   
   if (isLoading) {
@@ -153,6 +185,15 @@ export default function ProductDetailPage() {
   const discountedPrice = product.discountPercent 
     ? Math.round(product.price * (1 - product.discountPercent / 100))
     : product.price;
+  const modifierTotal = product.modifiers.reduce((total, modifier) => {
+    const selected = selectedModifiers[modifier.name];
+    const selectedLabels = Array.isArray(selected) ? selected : selected ? [selected] : [];
+    return total + selectedLabels.reduce((sum, label) => {
+      const option = modifier.options.find((item) => item.label === label);
+      return sum + (option?.price || 0);
+    }, 0);
+  }, 0);
+  const unitPrice = discountedPrice + modifierTotal;
   
   return (
     <main className="min-h-screen pt-24 pb-16" style={{ backgroundColor: '#F5EFE6' }}>
@@ -225,6 +266,44 @@ export default function ProductDetailPage() {
                   </span>
                 )}
               </div>
+
+              {product.modifiers.length > 0 && (
+                <div className="space-y-4 mb-6">
+                  {product.modifiers.map((modifier) => (
+                    <div key={modifier.id} className="p-4 rounded-xl" style={{ backgroundColor: '#FFFDF9', border: '1px solid #E0D6C8' }}>
+                      <p className="font-medium mb-3" style={{ color: '#2B2118' }}>
+                        {modifier.name}
+                        {modifier.required && <span style={{ color: '#DC2626' }}> *</span>}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {modifier.options.map((option) => {
+                          const selected = selectedModifiers[modifier.name];
+                          const isSelected = modifier.type === 'multi'
+                            ? (selected as string[] | undefined)?.includes(option.label)
+                            : selected === option.label;
+
+                          return (
+                            <button
+                              key={option.label}
+                              type="button"
+                              onClick={() => handleModifierChange(modifier.name, option.label, modifier.type)}
+                              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                              style={{
+                                backgroundColor: isSelected ? '#6F4E37' : '#F5EFE6',
+                                color: isSelected ? '#FFFDF9' : '#5C4A3D',
+                                border: isSelected ? '1px solid #6F4E37' : '1px solid #E0D6C8',
+                              }}
+                            >
+                              {option.label}
+                              {option.price > 0 && <span className="ml-1">+{formatPrice(option.price)}</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               
               {/* Quantity & Add to Cart */}
               <div className="flex items-center gap-4">
@@ -253,7 +332,7 @@ export default function ProductDetailPage() {
                   className="flex-1 py-4 font-semibold rounded-xl transition-all hover:shadow-lg"
                   style={{ backgroundColor: '#6F4E37', color: '#FFFDF9' }}
                 >
-                  Tambah ke Keranjang - {formatPrice(discountedPrice * quantity)}
+                  Tambah ke Keranjang - {formatPrice(unitPrice * quantity)}
                 </button>
               </div>
             </div>
