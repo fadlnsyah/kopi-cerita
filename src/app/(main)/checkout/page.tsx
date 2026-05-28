@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react';
 import { useCart } from '@/context/CartContext';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 // Format harga ke Rupiah
@@ -22,8 +21,7 @@ interface AppliedCoupon {
 }
 
 export default function CheckoutPage() {
-  const router = useRouter();
-  const { items, totalItems, totalPrice, clearCart } = useCart();
+  const { items, totalPrice, clearCart } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState('');

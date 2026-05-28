@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -34,11 +34,7 @@ export default function EditProductPage({
     isNew: false,
   });
 
-  useEffect(() => {
-    fetchProduct();
-  }, [id]);
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       const response = await fetch(`/api/admin/products/${id}`);
       if (response.ok) {
@@ -61,7 +57,11 @@ export default function EditProductPage({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [fetchProduct]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>

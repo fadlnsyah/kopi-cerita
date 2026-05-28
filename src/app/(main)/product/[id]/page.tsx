@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
-import { useSession } from 'next-auth/react';
 import { CoffeeCupIcon, PourOverIcon, LeafIcon, PastryIcon } from '@/components/Icons';
 import StarRating from '@/components/StarRating';
 
@@ -65,21 +64,13 @@ export default function ProductDetailPage() {
   const productId = params.id as string;
   const { addToCart } = useCart();
   const { success } = useToast();
-  const { status: authStatus } = useSession();
   
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   
-  useEffect(() => {
-    if (productId) {
-      fetchProduct();
-      fetchReviews();
-    }
-  }, [productId]);
-  
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       const res = await fetch(`/api/products/${productId}`);
       const data = await res.json();
@@ -89,9 +80,9 @@ export default function ProductDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [productId]);
   
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       const res = await fetch(`/api/reviews?productId=${productId}`);
       const data = await res.json();
@@ -99,7 +90,14 @@ export default function ProductDetailPage() {
     } catch (error) {
       console.error('Error fetching reviews:', error);
     }
-  };
+  }, [productId]);
+
+  useEffect(() => {
+    if (productId) {
+      fetchProduct();
+      fetchReviews();
+    }
+  }, [productId, fetchProduct, fetchReviews]);
   
   const handleAddToCart = () => {
     if (!product) return;

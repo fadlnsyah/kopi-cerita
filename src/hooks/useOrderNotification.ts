@@ -2,11 +2,6 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 
-interface OrderNotification {
-  count: number;
-  newOrderIds: string[];
-}
-
 /**
  * Hook untuk notifikasi order baru di admin panel
  * Polling setiap 10 detik untuk check pending orders
@@ -60,11 +55,14 @@ export function useOrderNotification() {
 
   // Polling setiap 10 detik
   useEffect(() => {
-    fetchPendingOrders(); // Initial fetch
+    const initialFetch = setTimeout(fetchPendingOrders, 0);
     
     const interval = setInterval(fetchPendingOrders, 10000);
     
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialFetch);
+      clearInterval(interval);
+    };
   }, [fetchPendingOrders]);
 
   const dismissNotification = () => setHasNewOrder(false);

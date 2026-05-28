@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 const STORAGE_KEY = 'kopi-cerita-recently-viewed';
 const MAX_ITEMS = 10;
@@ -15,23 +15,23 @@ interface RecentProduct {
 }
 
 export function useRecentlyViewed() {
-  const [recentProducts, setRecentProducts] = useState<RecentProduct[]>([]);
-  
-  // Load from localStorage on mount
-  useEffect(() => {
+  const [recentProducts, setRecentProducts] = useState<RecentProduct[]>(() => {
+    if (typeof window === 'undefined') return [];
+
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as RecentProduct[];
         // Filter out items older than 7 days
         const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        const filtered = parsed.filter(p => p.viewedAt > sevenDaysAgo);
-        setRecentProducts(filtered);
+        return parsed.filter(p => p.viewedAt > sevenDaysAgo);
       }
     } catch (error) {
       console.error('Error loading recently viewed:', error);
     }
-  }, []);
+    
+    return [];
+  });
   
   // Add a product to recently viewed
   const addToRecentlyViewed = useCallback((product: Omit<RecentProduct, 'viewedAt'>) => {

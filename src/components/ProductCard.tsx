@@ -33,24 +33,27 @@ function formatPrice(price: number): string {
 }
 
 // Get icon berdasarkan kategori
-function getCategoryIcon(category: string) {
+function CategoryIcon({ category, className, color }: { category: string; className?: string; color?: string }) {
   switch (category) {
-    case 'espresso': return CoffeeCupIcon;
-    case 'manual-brew': return PourOverIcon;
-    case 'non-coffee': return LeafIcon;
-    case 'snack': return PastryIcon;
-    default: return CoffeeCupIcon;
+    case 'espresso':
+      return <CoffeeCupIcon className={className} color={color} />;
+    case 'manual-brew':
+      return <PourOverIcon className={className} color={color} />;
+    case 'non-coffee':
+      return <LeafIcon className={className} color={color} />;
+    case 'snack':
+      return <PastryIcon className={className} color={color} />;
+    default:
+      return <CoffeeCupIcon className={className} color={color} />;
   }
 }
 
 export default function ProductCard({ product }: { product: Product }) {
-  const IconComponent = getCategoryIcon(product.category);
   const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { success } = useToast();
   const { status: authStatus } = useSession();
   const [isAdded, setIsAdded] = useState(false);
-  const [isHeartAnimating, setIsHeartAnimating] = useState(false);
 
   const isWishlisted = isInWishlist(product.id);
   
@@ -76,10 +79,6 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const handleWishlistToggle = () => {
     if (authStatus !== 'authenticated') return;
-    
-    // Trigger animation
-    setIsHeartAnimating(true);
-    setTimeout(() => setIsHeartAnimating(false), 400);
     
     if (isWishlisted) {
       removeFromWishlist(product.id);
@@ -108,7 +107,7 @@ export default function ProductCard({ product }: { product: Product }) {
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
         ) : (
-          <IconComponent className="w-16 h-16 opacity-40 transition-transform duration-300 group-hover:scale-110" color="#6F4E37" />
+          <CategoryIcon category={product.category} className="w-16 h-16 opacity-40 transition-transform duration-300 group-hover:scale-110" color="#6F4E37" />
         )}
         
         {/* Badges */}

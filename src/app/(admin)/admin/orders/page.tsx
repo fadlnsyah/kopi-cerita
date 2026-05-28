@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface Order {
   id: string;
@@ -41,11 +41,7 @@ export default function AdminOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [filterStatus]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const url = filterStatus === 'all' 
         ? '/api/admin/orders' 
@@ -60,7 +56,11 @@ export default function AdminOrdersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filterStatus]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const updateStatus = async (orderId: string, newStatus: string) => {
     setUpdatingId(orderId);

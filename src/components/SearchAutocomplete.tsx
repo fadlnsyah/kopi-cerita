@@ -105,6 +105,12 @@ export default function SearchAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
   
+  const handleSelect = useCallback((product: SearchResult) => {
+    onChange(product.name);
+    setIsOpen(false);
+    onProductSelect?.(product);
+  }, [onChange, onProductSelect]);
+  
   // Keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!isOpen || results.length === 0) return;
@@ -130,13 +136,7 @@ export default function SearchAutocomplete({
         setIsOpen(false);
         break;
     }
-  }, [isOpen, results, highlightedIndex]);
-  
-  const handleSelect = (product: SearchResult) => {
-    onChange(product.name);
-    setIsOpen(false);
-    onProductSelect?.(product);
-  };
+  }, [isOpen, results, highlightedIndex, handleSelect]);
   
   return (
     <div className="relative">
@@ -247,7 +247,7 @@ export default function SearchAutocomplete({
           className="absolute top-full left-0 right-0 mt-2 p-4 rounded-xl text-center"
           style={{ backgroundColor: '#FFFDF9', border: '1px solid #E0D6C8' }}
         >
-          <p style={{ color: '#5C4A3D' }}>Tidak ditemukan hasil untuk "{value}"</p>
+          <p style={{ color: '#5C4A3D' }}>Tidak ditemukan hasil untuk &quot;{value}&quot;</p>
         </div>
       )}
     </div>
