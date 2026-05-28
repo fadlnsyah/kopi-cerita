@@ -89,6 +89,26 @@ async function main() {
     ]),
   });
 
+  await prisma.coupon.upsert({
+    where: { code: 'WELCOME10' },
+    update: {
+      discount: 10,
+      minPurchase: 50000,
+      maxUses: null,
+      validUntil: new Date('2030-12-31T23:59:59.000Z'),
+      isActive: true,
+    },
+    create: {
+      code: 'WELCOME10',
+      discount: 10,
+      minPurchase: 50000,
+      maxUses: null,
+      validFrom: new Date(),
+      validUntil: new Date('2030-12-31T23:59:59.000Z'),
+      isActive: true,
+    },
+  });
+
   console.log('✅ Seed berhasil!');
 }
 
