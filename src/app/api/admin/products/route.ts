@@ -50,11 +50,22 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, description, price, category, image, isPopular, isNew } = body;
+    const { name, description, price, category, image, isPopular, isNew, discountPercent } = body;
 
     if (!name || !description || !price || !category) {
       return NextResponse.json(
         { error: 'Nama, deskripsi, harga, dan kategori harus diisi' },
+        { status: 400 }
+      );
+    }
+
+    const parsedDiscount = discountPercent === '' || discountPercent === null || discountPercent === undefined
+      ? null
+      : parseInt(discountPercent);
+
+    if (parsedDiscount !== null && (Number.isNaN(parsedDiscount) || parsedDiscount < 0 || parsedDiscount > 100)) {
+      return NextResponse.json(
+        { error: 'Diskon harus antara 0 sampai 100 persen' },
         { status: 400 }
       );
     }
@@ -68,6 +79,7 @@ export async function POST(request: Request) {
         image: image || null,
         isPopular: isPopular || false,
         isNew: isNew || false,
+        discountPercent: parsedDiscount && parsedDiscount > 0 ? parsedDiscount : null,
       },
     });
 

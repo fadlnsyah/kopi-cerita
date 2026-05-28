@@ -24,6 +24,7 @@ export default function NewProductPage() {
     price: '',
     category: 'espresso',
     image: '',
+    discountPercent: '',
     isPopular: false,
     isNew: false,
   });
@@ -177,6 +178,21 @@ export default function NewProductPage() {
               className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2"
               style={{ borderColor: '#E0D6C8', backgroundColor: '#FFFDF9', color: '#2B2118' }}
               placeholder="https://example.com/image.jpg"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2" style={{ color: '#5C4A3D' }}>Diskon (%)</label>
+            <input
+              type="number"
+              name="discountPercent"
+              min="0"
+              max="100"
+              value={formData.discountPercent}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2"
+              style={{ borderColor: '#E0D6C8', backgroundColor: '#FFFDF9', color: '#2B2118' }}
+              placeholder="Kosongkan jika tidak ada diskon"
             />
           </div>
 
