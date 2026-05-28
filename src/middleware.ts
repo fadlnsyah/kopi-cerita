@@ -69,6 +69,30 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  if (pathname === '/account' || pathname.startsWith('/api/account')) {
+    if (!token) {
+      if (pathname === '/account') {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+
+      return NextResponse.json(
+        { error: 'Unauthorized - Login required' },
+        { status: 401 }
+      );
+    }
+
+    if (token.role === 'admin') {
+      if (pathname === '/account') {
+        return NextResponse.redirect(new URL('/admin', request.url));
+      }
+
+      return NextResponse.json(
+        { error: 'Forbidden - Customer access only' },
+        { status: 403 }
+      );
+    }
+  }
+
   return NextResponse.next();
 }
 
@@ -78,5 +102,7 @@ export const config = {
     '/admin/:path*',
     '/api/admin/:path*',
     '/api/cart/:path*',
+    '/account',
+    '/api/account/:path*',
   ],
 };

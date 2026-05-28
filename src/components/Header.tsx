@@ -147,6 +147,14 @@ export default function Header() {
                       <p className="font-medium" style={{ color: '#2B2118' }}>{session.user?.name}</p>
                       <p className="text-sm" style={{ color: '#8B7355' }}>{session.user?.email}</p>
                     </div>
+                    <Link
+                      href="/account"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="block px-4 py-2 transition-colors hover:bg-[#F5EFE6]"
+                      style={{ color: '#5C4A3D' }}
+                    >
+                      Pengaturan Akun
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 transition-colors hover:bg-[#F5EFE6]"
@@ -235,6 +243,14 @@ export default function Header() {
                   <p className="font-medium" style={{ color: '#2B2118' }}>{session.user?.name}</p>
                   <p className="text-sm" style={{ color: '#8B7355' }}>{session.user?.email}</p>
                 </div>
+                <Link
+                  href="/account"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-2 font-medium"
+                  style={{ color: '#5C4A3D' }}
+                >
+                  Pengaturan Akun
+                </Link>
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);

@@ -68,11 +68,14 @@ export const authOptions: NextAuthOptions = {
 
   // Callbacks untuk menambah data ke token dan session
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // Saat login, tambahkan data user ke token
       if (user) {
         token.id = user.id;
         token.role = user.role;
+      }
+      if (trigger === 'update' && session?.user?.name) {
+        token.name = session.user.name;
       }
       return token;
     },
