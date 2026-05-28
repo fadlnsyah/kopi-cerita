@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { getSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -39,15 +39,12 @@ export default function LoginPage() {
       if (result?.error) {
         setError(result.error);
       } else {
-        // Fetch session untuk cek role
-        const sessionRes = await fetch('/api/auth/session');
-        const session = await sessionRes.json();
+        const session = await getSession();
         
         // Jika admin, redirect ke admin login
         if (session?.user?.role === 'admin') {
           setError('Akun admin tidak bisa login di sini. Gunakan halaman Admin Login.');
-          // Sign out admin
-          await fetch('/api/auth/signout', { method: 'POST' });
+          await signOut({ redirect: false });
           setIsLoading(false);
           return;
         }

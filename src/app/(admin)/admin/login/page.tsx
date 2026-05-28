@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { getSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -41,15 +41,12 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // Fetch session untuk cek role
-      const sessionRes = await fetch('/api/auth/session');
-      const session = await sessionRes.json();
+      const session = await getSession();
 
       // Pastikan user adalah admin
       if (session?.user?.role !== 'admin') {
         setError('Akun ini bukan admin. Gunakan halaman login user.');
-        // Sign out user non-admin
-        await fetch('/api/auth/signout', { method: 'POST' });
+        await signOut({ redirect: false });
         setIsLoading(false);
         return;
       }
