@@ -3,6 +3,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+function getEffectivePrice(product: { price: number; discountPercent: number | null }) {
+  if (product.discountPercent && product.discountPercent > 0) {
+    return Math.round(product.price * (1 - product.discountPercent / 100));
+  }
+
+  return product.price;
+}
+
 /**
  * GET /api/cart
  * Ambil cart user yang sedang login
@@ -29,6 +37,7 @@ export async function GET() {
                 id: true,
                 name: true,
                 price: true,
+                discountPercent: true,
                 category: true,
                 image: true,
               },
@@ -48,9 +57,10 @@ export async function GET() {
                 select: {
                   id: true,
                   name: true,
-                  price: true,
-                  category: true,
-                  image: true,
+                price: true,
+                discountPercent: true,
+                category: true,
+                image: true,
                 },
               },
             },
@@ -64,7 +74,9 @@ export async function GET() {
       id: item.id,
       productId: item.productId,
       name: item.product.name,
-      price: item.product.price,
+      price: getEffectivePrice(item.product),
+      originalPrice: item.product.price,
+      discountPercent: item.product.discountPercent,
       category: item.product.category,
       image: item.product.image,
       quantity: item.quantity,

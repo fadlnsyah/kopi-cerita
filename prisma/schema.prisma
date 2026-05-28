@@ -93,18 +93,25 @@ model CartItem {
 // ==========================================
 
 model Order {
-  id          String      @id @default(cuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
-  items       OrderItem[]
-  total       Int
-  status      String      @default("pending") // pending, confirmed, preparing, ready, delivered, cancelled
-  notes       String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id             String      @id @default(cuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  items          OrderItem[]
+  subtotal       Int         @default(0)
+  serviceFee     Int         @default(2000)
+  discountAmount Int         @default(0)
+  total          Int
+  couponCode     String?
+  contactPhone   String?
+  contactEmail   String?
+  orderType      String      @default("dine-in") // dine-in, takeaway
+  status         String      @default("pending") // pending, confirmed, preparing, ready, delivered, cancelled
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
   
   // Relations
-  reviews     Review[]
+  reviews        Review[]
 }
 
 model OrderItem {

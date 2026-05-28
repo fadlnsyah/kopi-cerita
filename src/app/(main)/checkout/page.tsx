@@ -95,7 +95,13 @@ export default function CheckoutPage() {
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: formData.notes }),
+        body: JSON.stringify({
+          phone: formData.phone,
+          email: formData.email,
+          orderType: formData.orderType,
+          notes: formData.notes,
+          couponCode: appliedCoupon?.code,
+        }),
       });
 
       const data = await response.json();

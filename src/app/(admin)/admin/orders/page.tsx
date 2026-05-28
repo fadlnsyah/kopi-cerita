@@ -8,7 +8,14 @@ interface Order {
     name: string;
     email: string;
   };
+  subtotal: number;
+  serviceFee: number;
+  discountAmount: number;
   total: number;
+  couponCode: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  orderType: string;
   status: string;
   notes: string | null;
   createdAt: string;
@@ -242,6 +249,16 @@ export default function AdminOrdersPage() {
                 <p className="text-sm mb-1" style={{ color: '#8B7355' }}>Pelanggan</p>
                 <p style={{ color: '#2B2118' }}>{selectedOrder.user.name}</p>
                 <p className="text-sm" style={{ color: '#8B7355' }}>{selectedOrder.user.email}</p>
+                {selectedOrder.contactPhone && (
+                  <p className="text-sm" style={{ color: '#8B7355' }}>{selectedOrder.contactPhone}</p>
+                )}
+              </div>
+
+              <div>
+                <p className="text-sm mb-1" style={{ color: '#8B7355' }}>Tipe Pesanan</p>
+                <p style={{ color: '#2B2118' }}>
+                  {selectedOrder.orderType === 'takeaway' ? 'Take Away' : 'Dine In'}
+                </p>
               </div>
 
               {/* Items */}
@@ -266,7 +283,23 @@ export default function AdminOrdersPage() {
 
               {/* Total */}
               <div className="pt-4" style={{ borderTop: '1px solid #E0D6C8' }}>
-                <div className="flex justify-between items-center">
+                <div className="space-y-2 mb-3">
+                  <div className="flex justify-between text-sm">
+                    <span style={{ color: '#8B7355' }}>Subtotal</span>
+                    <span style={{ color: '#2B2118' }}>{formatCurrency(selectedOrder.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span style={{ color: '#8B7355' }}>Biaya Layanan</span>
+                    <span style={{ color: '#2B2118' }}>{formatCurrency(selectedOrder.serviceFee)}</span>
+                  </div>
+                  {selectedOrder.discountAmount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: '#16A34A' }}>Diskon {selectedOrder.couponCode ? `(${selectedOrder.couponCode})` : ''}</span>
+                      <span style={{ color: '#16A34A' }}>-{formatCurrency(selectedOrder.discountAmount)}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-between items-center pt-3" style={{ borderTop: '1px solid #E0D6C8' }}>
                   <span style={{ color: '#8B7355' }}>Total</span>
                   <span className="text-xl font-bold" style={{ color: '#2B2118' }}>
                     {formatCurrency(selectedOrder.total)}
