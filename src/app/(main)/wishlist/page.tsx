@@ -16,6 +16,7 @@ interface Product {
   isPopular: boolean;
   isNew: boolean;
   discountPercent?: number | null;
+  hasModifiers?: boolean;
 }
 
 export default function WishlistPage() {

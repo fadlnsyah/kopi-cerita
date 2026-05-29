@@ -15,6 +15,7 @@ interface Product {
   image: string | null;
   isPopular: boolean;
   isNew: boolean;
+  hasModifiers?: boolean;
 }
 
 // Category data with icon components

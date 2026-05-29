@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useToast } from '@/context/ToastContext';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import StarRating from './StarRating';
 
 interface Product {
@@ -21,6 +22,7 @@ interface Product {
   discountPercent?: number | null;
   averageRating?: number | null;
   reviewCount?: number;
+  hasModifiers?: boolean;
 }
 
 // Format harga ke Rupiah
@@ -49,6 +51,7 @@ function CategoryIcon({ category, className, color }: { category: string; classN
 }
 
 export default function ProductCard({ product }: { product: Product }) {
+  const router = useRouter();
   const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { success } = useToast();
@@ -63,13 +66,20 @@ export default function ProductCard({ product }: { product: Product }) {
     ? Math.round(product.price * (1 - (product.discountPercent! / 100)))
     : product.price;
 
-  const handleAddToCart = () => {
-    addToCart({
+  const handleAddToCart = async () => {
+    if (product.hasModifiers) {
+      router.push(`/product/${product.id}`);
+      return;
+    }
+
+    const added = await addToCart({
       id: product.id,
       name: product.name,
       price: discountedPrice,
       category: product.category,
     });
+
+    if (!added) return;
     
     // Show feedback with toast
     setIsAdded(true);
@@ -223,7 +233,7 @@ export default function ProductCard({ product }: { product: Product }) {
               color: '#FFFDF9' 
             }}
           >
-            {isAdded ? '✓ Ditambahkan' : '+ Keranjang'}
+            {product.hasModifiers ? 'Pilih Opsi' : isAdded ? '✓ Ditambahkan' : '+ Keranjang'}
           </button>
         </div>
       </div>

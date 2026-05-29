@@ -116,9 +116,9 @@ export default function ProductDetailPage() {
     }
   }, [productId, fetchProduct, fetchReviews]);
   
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product) return;
-    addToCart(
+    const added = await addToCart(
       {
         id: product.id,
         name: product.name,
@@ -129,6 +129,7 @@ export default function ProductDetailPage() {
       },
       { quantity, modifiers: selectedModifiers }
     );
+    if (!added) return;
     success(`${product.name} ditambahkan ke keranjang!`);
   };
 

@@ -154,7 +154,7 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
     
     setIsLoading(true);
     try {
-      addToCart(
+      const added = await addToCart(
         {
           id: product.id,
           name: product.name,
@@ -165,6 +165,8 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
         },
         { quantity, modifiers: selectedModifiers }
       );
+
+      if (!added) return;
       
       success(`${product.name} ditambahkan ke keranjang!`);
       onClose();

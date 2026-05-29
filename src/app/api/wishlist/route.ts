@@ -32,6 +32,9 @@ export async function GET() {
             isPopular: true,
             isNew: true,
             discountPercent: true,
+            _count: {
+              select: { modifiers: true },
+            },
           },
         },
       },
@@ -39,7 +42,11 @@ export async function GET() {
     });
 
     // Return products dari wishlist
-    const products = wishlists.map((w) => w.product);
+    const products = wishlists.map((w) => ({
+      ...w.product,
+      hasModifiers: w.product._count.modifiers > 0,
+      _count: undefined,
+    }));
 
     return NextResponse.json({ products });
   } catch (error) {

@@ -29,7 +29,7 @@ interface CartContextType {
   addToCart: (
     product: { id: string; name: string; price: number; category: string },
     options?: { quantity?: number; modifiers?: Record<string, string | string[]> }
-  ) => void;
+  ) => Promise<boolean>;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -77,18 +77,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [status, fetchCart]);
 
-  const addToCart = (
+  const addToCart = async (
     product: { id: string; name: string; price: number; category: string },
     options: { quantity?: number; modifiers?: Record<string, string | string[]> } = {}
   ) => {
     // Jika belum login, tampilkan modal dan simpan action
     if (status !== 'authenticated') {
-      setPendingAction(() => () => addToCartAPI(product, options));
+      setPendingAction(() => () => {
+        void addToCartAPI(product, options);
+      });
       showLoginModal();
-      return;
+      return false;
     }
 
-    addToCartAPI(product, options);
+    return addToCartAPI(product, options);
   };
 
   const addToCartAPI = async (
@@ -109,12 +111,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         // Refresh cart untuk mendapat data terbaru
         await fetchCart();
+        return true;
       } else {
         const data = await response.json();
         console.error('Error adding to cart:', data.error);
+        return false;
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
+      return false;
     }
   };
 
