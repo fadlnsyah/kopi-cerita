@@ -59,7 +59,7 @@ async function generateGeminiJson(messages: ChatCompletionMessage[]) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
   const systemInstruction = messages
     .filter((message) => message.role === 'system')
     .map((message) => message.content)
