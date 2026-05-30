@@ -5,6 +5,7 @@ import { AuthModalProvider } from "@/context/AuthModalContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { ToastProvider } from "@/context/ToastContext";
 import LoginModal from "@/components/LoginModal";
+import ChatWidget from "@/components/ai/ChatWidget";
 
 /**
  * Main Layout untuk User/Customer
@@ -26,6 +27,7 @@ export default function MainLayout({
             {children}
             <Footer />
             <LoginModal />
+            <ChatWidget />
           </WishlistProvider>
         </CartProvider>
       </ToastProvider>
